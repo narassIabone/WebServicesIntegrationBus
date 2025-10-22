@@ -15,7 +15,7 @@ public class Main {
 
             // Сохранение сообщения
             session.beginTransaction();
-            Message message = new Message("Hello World");
+            Message message = new Message("Hello World 2");
             System.out.println("ID: " + message.getId());
             System.out.println("Payload: " + message.getPayload());
             System.out.println("Timestamp: " + message.getTimestamp());
