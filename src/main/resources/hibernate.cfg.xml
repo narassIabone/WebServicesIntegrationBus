@@ -16,7 +16,7 @@
         <property name="show_sql">true</property> <!-- Show SQL in console -->
         <property name="format_sql">true</property> <!-- Show SQL formatted -->
 
-        <mapping class="org.example.Message"/>
+        <mapping class="org.example.model.Message"/>
 
     </session-factory>
 </hibernate-configuration>

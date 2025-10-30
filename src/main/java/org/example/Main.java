@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.model.Message;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;

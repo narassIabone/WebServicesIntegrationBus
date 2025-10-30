@@ -1,7 +1,7 @@
-package org.example;
+package org.example.test;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.example.model.Message;
+import org.example.service.MessageTransformer;
 
 public class MessageTestApp{
 

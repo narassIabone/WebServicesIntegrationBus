@@ -1,7 +1,6 @@
-package org.example;
+package org.example.model;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.UUID;
 import jakarta.persistence.*;
 
