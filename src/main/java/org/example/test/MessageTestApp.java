@@ -2,41 +2,52 @@ package org.example.test;
 
 import org.example.model.Message;
 import org.example.service.MessageTransformer;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 
-public class MessageTestApp{
+import java.util.HashMap;
+import java.util.Map;
+
+public class MessageTestApp {
 
     public static void main(String[] args) {
-        try {
+        try (SessionFactory sessionFactory = new Configuration()
+                .configure()
+                .buildSessionFactory();
+             Session session = sessionFactory.openSession()) {
+
             // Создаем headers
-//            Map<String, String> headers = new HashMap<>();
-//            headers.put("source", "frontend");
-//            headers.put("client", "client1");
+            Map<String, String> headers = new HashMap<>();
+            headers.put("source", "frontend");
+            headers.put("client", "client1");
 
-            // Создаем payload в формате JSON
-            String jsonPayload = "{\"user\":\"Alice\",\"action\":\"login\"}";
+            // Сохранение сообщения
+            session.beginTransaction();
+            Message message = new Message("Hello World 2");
+            message.setHeaders(headers); // устанавливаем headers
 
-            // Создаем объект Message
-//            Message message = new Message(jsonPayload, headers);
-            Message message = new Message(jsonPayload);
-            System.out.println("Сообщение пришло в JSON:");
             System.out.println("ID: " + message.getId());
-            System.out.println("JSON Payload: " + message.getPayload());
-            //System.out.println("Headers: " + message.getHeaders());
+            System.out.println("Payload: " + message.getPayload());
+            System.out.println("Headers: " + message.getHeaders());
             System.out.println("Timestamp: " + message.getTimestamp());
             System.out.println("Status: " + message.getStatus());
 
-            System.out.println("Сообщение трансформировано в XML:");
-            String xmlPayload = MessageTransformer.jsonToXml(message.getPayload(), "sad");
-            message.setPayload(xmlPayload);
-            System.out.println("XML Payload: " + message.getPayload());
+            session.save(message);
+            session.getTransaction().commit();
 
-            System.out.println("Сообщение трансформировано обратно в JSON:");
-            jsonPayload = MessageTransformer.xmlToJson(message.getPayload());
-            message.setPayload(jsonPayload);
-            System.out.println("JSON Payload: " + message.getPayload());
+            // Получение сообщения
+            session.beginTransaction();
+            Message retrievedMessage = session.get(Message.class, message.getId());
 
-        } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Retrieved message:");
+            System.out.println("ID: " + retrievedMessage.getId());
+            System.out.println("Payload: " + retrievedMessage.getPayload());
+            System.out.println("Headers: " + retrievedMessage.getHeaders());
+            System.out.println("Timestamp: " + retrievedMessage.getTimestamp());
+            System.out.println("Status: " + retrievedMessage.getStatus());
+
+            session.getTransaction().commit();
         }
     }
 }

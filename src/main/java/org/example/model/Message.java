@@ -1,7 +1,11 @@
 package org.example.model;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 
 
@@ -15,8 +19,8 @@ public class Message {
     @Column(name = "payload")
     private String payload;
 
-    //@Column(name = "headers")
-    // Map<String, String> headers;
+    @Column(name = "headers", columnDefinition = "TEXT")
+    private String headers;
 
     @Column(name = "timestamp")
     private LocalDateTime timestamp;
@@ -47,13 +51,22 @@ public class Message {
         this.payload = payload;
     }
 
-//    public Map<String, String> getHeaders() {
-//        return headers;
-//    }
+    public Map<String, String> getHeaders() {
+        if (headers == null) return null;
+        try {
+            return new ObjectMapper().readValue(headers, new TypeReference<>() {});
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-//    public void setHeaders(Map<String, String> headers) {
-//        this.headers = headers;
-//    }
+    public void setHeaders(Map<String, String> headers) {
+        try {
+            this.headers = new ObjectMapper().writeValueAsString(headers);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public LocalDateTime getTimestamp() {
         return timestamp;
