@@ -29,12 +29,23 @@ public class Message {
     @Column(name = "status")
     private MessageStatus status;
 
-    public Message(String payload
-            //, Map<String, String> headers
-                   ) {
+    public Message(){
+        this.id = UUID.randomUUID().toString();
+        this.timestamp = LocalDateTime.now();
+        this.status = MessageStatus.NEW; // начальный статус
+    }
+
+    public Message(String payload) {
         this.id = UUID.randomUUID().toString();
         this.payload = payload;
-        //this.headers = headers;
+        this.timestamp = LocalDateTime.now();
+        this.status = MessageStatus.NEW; // начальный статус
+    }
+
+    public Message(String payload, Map<String, String> headers) {
+        this.id = UUID.randomUUID().toString();
+        this.payload = payload;
+        this.headers = headers;
         this.timestamp = LocalDateTime.now();
         this.status = MessageStatus.NEW; // начальный статус
     }
