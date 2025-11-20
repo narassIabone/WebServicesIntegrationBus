@@ -26,7 +26,6 @@ public class MessageController {
         System.out.println("ID: " + message.getId());
         System.out.println("Payload: " + message.getPayload());
         System.out.println("Headers: " + message.getHeaders());
-        System.out.println("Timestamp: " + message.getTimestamp());
         System.out.println("Status: " + message.getStatus());
 
         // Можно дальше передать в обработчик

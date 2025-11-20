@@ -1,24 +1,20 @@
 package org.example.model.route;
 
-import java.util.List;
 import java.util.Map;
 
 public class NodeConfig {
     private String id;
     private NodeType type;
-    private String kafkaTopic;
+    private String inputTopic;
     private Map<String, Object> config;
-    private List<String> nextNodes;
 
     public NodeConfig() {}
 
-    public NodeConfig(String id, NodeType type, String kafkaTopic,
-                      Map<String, Object> config, List<String> nextNodes) {
+    public NodeConfig(String id, NodeType type, String inputTopic, Map<String, Object> config) {
         this.id = id;
         this.type = type;
-        this.kafkaTopic = kafkaTopic;
+        this.inputTopic = inputTopic;
         this.config = config;
-        this.nextNodes = nextNodes;
     }
 
     public String getId() {
@@ -37,14 +33,6 @@ public class NodeConfig {
         this.type = type;
     }
 
-    public String getKafkaTopic() {
-        return kafkaTopic;
-    }
-
-    public void setKafkaTopic(String kafkaTopic) {
-        this.kafkaTopic = kafkaTopic;
-    }
-
     public Map<String, Object> getConfig() {
         return config;
     }
@@ -53,12 +41,12 @@ public class NodeConfig {
         this.config = config;
     }
 
-    public List<String> getNextNodes() {
-        return nextNodes;
+    public String getInputTopic() {
+        return inputTopic;
     }
 
-    public void setNextNodes(List<String> nextNodes) {
-        this.nextNodes = nextNodes;
+    public void setInputTopic(String inputTopic) {
+        this.inputTopic = inputTopic;
     }
 
     @Override
@@ -66,9 +54,7 @@ public class NodeConfig {
         return "NodeConfig{" +
                 "id='" + id + '\'' +
                 ", type=" + type +
-                ", kafkaTopic='" + kafkaTopic + '\'' +
                 ", config=" + config +
-                ", nextNodes=" + nextNodes +
                 '}';
     }
 }

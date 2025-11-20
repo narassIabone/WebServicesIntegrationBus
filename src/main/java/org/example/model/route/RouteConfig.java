@@ -6,13 +6,15 @@ public class RouteConfig {
     private String routeId;
     private String description;
     private List<NodeConfig> nodes;
+    private List<RouteLink> links;
 
     public RouteConfig() {}
 
-    public RouteConfig(String routeId, String description, List<NodeConfig> nodes) {
+    public RouteConfig(String routeId, String description, List<NodeConfig> nodes, List<RouteLink> links) {
         this.routeId = routeId;
         this.description = description;
         this.nodes = nodes;
+        this.links = links;
     }
 
     public String getRouteId() {
@@ -37,6 +39,14 @@ public class RouteConfig {
 
     public void setNodes(List<NodeConfig> nodes) {
         this.nodes = nodes;
+    }
+
+    public List<RouteLink> getLinks() {
+        return links;
+    }
+
+    public void setLinks(List<RouteLink> links) {
+        this.links = links;
     }
 
     @Override
