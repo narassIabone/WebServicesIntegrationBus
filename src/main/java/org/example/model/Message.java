@@ -9,6 +9,26 @@ public class Message {
 
     private final String id;
     private final Instant createdAt;
+    private MessageStatus status;
+    private String payload;
+    private Map<String, Object> headers = new HashMap<>();
+    private Map<String, Object> context = new HashMap<>();
+
+    // Конструктор
+    public Message(String payload) {
+        this.id = UUID.randomUUID().toString();
+        this.createdAt = Instant.now();
+        this.status = MessageStatus.NEW;
+        this.payload = payload;
+    }
+
+    // Конструктор с заголовками
+    public Message(String payload, Map<String, Object> headers) {
+        this(payload);
+        if (headers != null) {
+            this.headers.putAll(headers);
+        }
+    }
 
     public String getId() {
         return id;
@@ -48,27 +68,6 @@ public class Message {
 
     public void setContext(Map<String, Object> context) {
         this.context = context;
-    }
-
-    private MessageStatus status;
-    private String payload;
-    private Map<String, Object> headers = new HashMap<>();
-    private Map<String, Object> context = new HashMap<>();
-
-    // Конструктор
-    public Message(String payload) {
-        this.id = UUID.randomUUID().toString();
-        this.createdAt = Instant.now();
-        this.status = MessageStatus.NEW;
-        this.payload = payload;
-    }
-
-    // Конструктор с заголовками
-    public Message(String payload, Map<String, Object> headers) {
-        this(payload);
-        if (headers != null) {
-            this.headers.putAll(headers);
-        }
     }
 
     public void setRouteId(String routeId) {

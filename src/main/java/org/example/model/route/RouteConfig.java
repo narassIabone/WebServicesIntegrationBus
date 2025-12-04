@@ -4,7 +4,7 @@ import java.util.List;
 
 public class RouteConfig {
     private String routeId;
-    private String description;
+    private String startTopic;
     private List<NodeConfig> nodes;
     private List<RouteLink> links;
 
@@ -12,7 +12,7 @@ public class RouteConfig {
 
     public RouteConfig(String routeId, String description, List<NodeConfig> nodes, List<RouteLink> links) {
         this.routeId = routeId;
-        this.description = description;
+        this.startTopic = description;
         this.nodes = nodes;
         this.links = links;
     }
@@ -25,12 +25,12 @@ public class RouteConfig {
         this.routeId = routeId;
     }
 
-    public String getDescription() {
-        return description;
+    public String getStartTopic() {
+        return startTopic;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setStartTopic(String startTopic) {
+        this.startTopic = startTopic;
     }
 
     public List<NodeConfig> getNodes() {
@@ -53,7 +53,7 @@ public class RouteConfig {
     public String toString() {
         return "RouteConfig{" +
                 "routeId='" + routeId + '\'' +
-                ", description='" + description + '\'' +
+                ", description='" + startTopic + '\'' +
                 ", nodes=" + nodes +
                 '}';
     }

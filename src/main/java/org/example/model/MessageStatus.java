@@ -4,5 +4,6 @@ public enum MessageStatus {
     NEW,
     PROCESSING,
     DELIVERED,
-    ERROR
+    ERROR,
+    SPLITTED
 }
