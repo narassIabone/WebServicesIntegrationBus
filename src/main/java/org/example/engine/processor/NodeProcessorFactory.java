@@ -1,6 +1,6 @@
-package org.example.engine;
+package org.example.engine.processor;
 
-import org.example.engine.node_processors.RestCallNodeProcessor;
+import org.example.engine.processor.impl.RestCallNodeProcessor;
 import org.example.model.route.NodeType;
 
 import java.util.Map;

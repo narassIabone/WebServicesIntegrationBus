@@ -1,6 +1,6 @@
 package org.example.service;
 
-import org.example.model.Message;
+import org.example.model.core.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;

@@ -1,9 +1,8 @@
 package org.example.test;
 
-import org.example.model.Message;
-import org.example.service.ExternalServiceClient;
-import org.example.service.RestServiceClient;
-import org.example.service.ServiceClientFactory;
+import org.example.model.core.Message;
+import org.example.service.sender.ExternalServiceClient;
+import org.example.service.sender.ServiceClientFactory;
 
 public class SoapTestApp {
     public static void main(String[] args) {

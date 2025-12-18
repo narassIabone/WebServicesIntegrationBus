@@ -1,4 +1,4 @@
-package org.example.model;
+package org.example.model.core;
 
 import java.time.Instant;
 import java.util.HashMap;

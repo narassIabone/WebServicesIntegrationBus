@@ -3,7 +3,7 @@ package org.example.model.route;
 import java.util.List;
 
 public class RouteConfig {
-    private String routeId;
+    private String Id;
     private String startTopic;
     private List<NodeConfig> nodes;
     private List<RouteLink> links;
@@ -11,18 +11,18 @@ public class RouteConfig {
     public RouteConfig() {}
 
     public RouteConfig(String routeId, String description, List<NodeConfig> nodes, List<RouteLink> links) {
-        this.routeId = routeId;
+        this.Id = routeId;
         this.startTopic = description;
         this.nodes = nodes;
         this.links = links;
     }
 
-    public String getRouteId() {
-        return routeId;
+    public String getId() {
+        return Id;
     }
 
-    public void setRouteId(String routeId) {
-        this.routeId = routeId;
+    public void setId(String id) {
+        this.Id = id;
     }
 
     public String getStartTopic() {
@@ -52,7 +52,7 @@ public class RouteConfig {
     @Override
     public String toString() {
         return "RouteConfig{" +
-                "routeId='" + routeId + '\'' +
+                "routeId='" + Id + '\'' +
                 ", description='" + startTopic + '\'' +
                 ", nodes=" + nodes +
                 '}';

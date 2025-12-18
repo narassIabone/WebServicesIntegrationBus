@@ -1,6 +1,6 @@
 package org.example.controller;
 
-import org.example.model.Message;
+import org.example.model.core.Message;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;

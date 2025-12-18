@@ -1,13 +1,13 @@
-package org.example.engine.node_processors;
+package org.example.engine.processor.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.engine.NodeProcessor;
-import org.example.model.Message;
-import org.example.model.MessageStatus;
+import org.example.engine.processor.NodeProcessor;
+import org.example.model.core.Message;
+import org.example.model.core.MessageStatus;
 import org.example.model.route.NodeConfig;
 import org.example.service.KafkaProducerService;
-import org.example.service.MessageMapper;
+import org.example.service.transformer.MessageMapper;
 
 import java.util.Map;
 

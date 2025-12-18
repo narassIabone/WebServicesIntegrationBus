@@ -1,8 +1,8 @@
 package org.example.test;
 
-import org.example.model.Message;
-import org.example.service.ExternalServiceClient;
-import org.example.service.HttpServiceClient;
+import org.example.model.core.Message;
+import org.example.service.sender.ExternalServiceClient;
+import org.example.service.sender.HttpServiceClient;
 
 import java.util.Map;
 

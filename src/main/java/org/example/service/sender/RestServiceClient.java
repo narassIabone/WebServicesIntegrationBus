@@ -1,6 +1,6 @@
-package org.example.service;
+package org.example.service.sender;
 
-import org.example.model.Message;
+import org.example.model.core.Message;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 

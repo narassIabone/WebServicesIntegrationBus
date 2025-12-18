@@ -1,7 +1,6 @@
 package org.example.test;
 
-import org.example.model.Message;
-import org.example.service.MessageTransformer;
+import org.example.model.core.Message;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;

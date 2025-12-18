@@ -1,9 +1,9 @@
-package org.example.engine.node_processors;
+package org.example.engine.processor.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.engine.NodeProcessor;
-import org.example.model.Message;
+import org.example.engine.processor.NodeProcessor;
+import org.example.model.core.Message;
 import org.example.model.route.NodeConfig;
 
 import java.util.List;

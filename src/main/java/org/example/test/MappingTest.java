@@ -1,7 +1,7 @@
 package org.example.test;
 
 import java.util.Map;
-import org.example.service.MessageMapper;
+import org.example.service.transformer.MessageMapper;
 
 public class MappingTest {
     public static void main(String[] args) {
