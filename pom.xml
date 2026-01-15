@@ -42,6 +42,17 @@
             <version>42.7.8</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+
         <!-- XML обработка -->
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
