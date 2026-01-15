@@ -1,6 +1,9 @@
 package org.example.controller;
 
 import org.example.model.core.Message;
+import org.example.service.MessageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -9,28 +12,47 @@ import java.util.Map;
 @RequestMapping("/api/messages")
 public class MessageController {
 
+    private final MessageService messageService;
+
+    @Autowired
+    public MessageController(MessageService messageService) {
+        this.messageService = messageService;
+    }
+
     @PostMapping
-    public String receiveMessage(@RequestBody Map<String, Object> request) {
-        // Извлекаем payload (JSON или XML строку)
-        String payload = request.get("payload").toString();
+    public ResponseEntity<String> receiveMessage(@RequestBody Map<String, Object> request) {
+        // звлекаем payload
+        Object payloadObj = request.get("payload");
+        if (payloadObj == null) {
+            return ResponseEntity.badRequest().body("Error: 'payload' is required");
+        }
 
-        // Извлекаем headers (если есть)
-        Map<String, String> headers = (Map<String, String>) request.getOrDefault("headers", Map.of());
+        // Извлекаем headers
+        Map<String, Object> headers = (Map<String, Object>) request.get("headers");
 
-        // Создаём объект Message и устанавливаем headers
-        Message message = new Message(payload);
-        message.setHeaders(headers);
+        Message message = new Message(payloadObj.toString());
+        if (headers != null) {
+            message.getHeaders().putAll(headers);
+        }
 
-        // Пример: выводим в консоль, пока что без Kafka
-        System.out.println("Шина получила новое сообщение:");
+        // Вывод в консоль
+
+        System.out.println("=== Шина получила новое сообщение ===");
         System.out.println("ID: " + message.getId());
-        System.out.println("Payload: " + message.getPayload());
-        System.out.println("Headers: " + message.getHeaders());
+        System.out.println("Time (UTC): " + message.getCreatedAt());
         System.out.println("Status: " + message.getStatus());
 
-        // Можно дальше передать в обработчик
-        // messageProcessor.process(message);
+        // Сохранение в БД
+        try {
+            messageService.saveMessage(message);
 
-        return "Message received successfully with ID: " + message.getId();
+            System.out.println("Сообщение успешно сохранено в БД с ID: " + message.getId());
+
+            return ResponseEntity.ok("Message received and saved. ID: " + message.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body("Failed to save message: " + e.getMessage());
+        }
     }
 }

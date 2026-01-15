@@ -6,7 +6,7 @@ public class ServiceClientFactory {
         return switch (protocol.toUpperCase()) {
             case "REST" -> new RestServiceClient();
             //case "SOAP" -> new SoapServiceClient();
-            case "HTTP" -> new HttpServiceClient();
+            //case "HTTP" -> new HttpServiceClient();
             default -> throw new IllegalArgumentException("Unsupported protocol: " + protocol);
         };
     }
