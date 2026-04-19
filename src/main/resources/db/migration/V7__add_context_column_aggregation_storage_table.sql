@@ -1,0 +1,1 @@
+ALTER TABLE aggregation_storage ADD COLUMN contexts JSONB NOT NULL DEFAULT '{}'::jsonb;

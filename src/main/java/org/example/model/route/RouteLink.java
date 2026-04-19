@@ -1,73 +1,33 @@
 package org.example.model.route;
 
+import jakarta.persistence.*;
+import lombok.*;
+
 import java.util.Map;
+import java.util.UUID;
 
+@Entity
+@Table(name = "links")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class RouteLink {
-    private String fromNodeId;
-    private String toNodeId;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "link_id", updatable = false, nullable = false)
+    private UUID Id;
+
+    private int fromNodeId;
+    private int toNodeId;
+
     private String outputTopic;
-    private boolean async; // true — Kafka, false — direct
+    private boolean async;
 
-    // Маппинг между полями сообщений
-    // Ключ — имя поля во входящем сообщении, значение — имя поля в выходном
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "link_field_mappings",
+            joinColumns = @JoinColumn(name = "link_id")
+    )
+    @MapKeyColumn(name = "source_field")
+    @Column(name = "target_field")
     private Map<String, String> fieldMapping;
-
-    public RouteLink(String fromNodeId, String toNodeId, String outputTopic, boolean async, Map<String, String> fieldMapping) {
-        this.fromNodeId = fromNodeId;
-        this.toNodeId = toNodeId;
-        this.outputTopic = outputTopic;
-        this.async = async;
-        this.fieldMapping = fieldMapping;
-    }
-
-    public String getFromNodeId() {
-        return fromNodeId;
-    }
-
-    public void setFromNodeId(String fromNodeId) {
-        this.fromNodeId = fromNodeId;
-    }
-
-    public String getToNodeId() {
-        return toNodeId;
-    }
-
-    public void setToNodeId(String toNodeId) {
-        this.toNodeId = toNodeId;
-    }
-
-    public String getoutputTopic() {
-        return outputTopic;
-    }
-
-    public void setoutputTopic(String outputTopic) {
-        this.outputTopic = outputTopic;
-    }
-
-    public boolean isAsync() {
-        return async;
-    }
-
-    public void setAsync(boolean async) {
-        this.async = async;
-    }
-
-    public Map<String, String> getFieldMapping() {
-        return fieldMapping;
-    }
-
-    public void setFieldMapping(Map<String, String> fieldMapping) {
-        this.fieldMapping = fieldMapping;
-    }
-
-    @Override
-    public String toString() {
-        return "RouteLink{" +
-                "fromNodeId='" + fromNodeId + '\'' +
-                ", toNodeId='" + toNodeId + '\'' +
-                ", kafkaTopicName='" + outputTopic + '\'' +
-                ", async=" + async +
-                ", fieldMapping=" + fieldMapping +
-                '}';
-    }
 }

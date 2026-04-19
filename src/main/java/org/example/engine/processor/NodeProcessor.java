@@ -1,11 +1,8 @@
 package org.example.engine.processor;
 
-import org.example.engine.executor.NodeRuntimeContext;
+import org.example.model.core.Message;
+import org.example.model.route.NodeConfig;
 
 public interface NodeProcessor {
-    void init(NodeRuntimeContext context);
-
-    void start();
-
-    void stop();
+    ProcessorResult process(Message message, NodeConfig config) throws Exception;
 }

@@ -5,5 +5,6 @@ public enum MessageStatus {
     PROCESSING,
     DELIVERED,
     ERROR,
-    SPLITTED
+    SPLITTED,
+    FAILED
 }

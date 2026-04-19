@@ -1,18 +1,25 @@
 package org.example.engine.processor;
 
-//import org.example.engine.processor.impl.RestCallNodeProcessor;
-//import org.example.model.route.NodeType;
-//
-//import java.util.Map;
-//
-//public class NodeProcessorFactory {
-//
-//    private static final Map<NodeType, NodeProcessor> processors = Map.of(
-//            NodeType.REST_CALL, new RestCallNodeProcessor()
-//            // Добавим позже: KAFKA_PUBLISH, DB_QUERY, VALIDATION и т.д.
-//    );
-//
-//    public static NodeProcessor get(NodeType type) {
-//        return processors.get(type);
-//    }
-//}
+import org.example.model.route.NodeType;
+import org.springframework.stereotype.Service;
+import java.util.Map;
+
+@Service
+public class NodeProcessorFactory {
+
+    // Spring сам найдет все реализации NodeProcessor и положит их сюда
+    // Ключ — имя бина (например "REST_CALL"), значение — сам объект
+    private final Map<String, NodeProcessor> processors;
+
+    public NodeProcessorFactory(Map<String, NodeProcessor> processors) {
+        this.processors = processors;
+    }
+
+    public NodeProcessor getProcessor(NodeType type) {
+        NodeProcessor processor = processors.get(type.name());
+        if (processor == null) {
+            throw new IllegalArgumentException("Процессор не найден для типа: " + type);
+        }
+        return processor;
+    }
+}

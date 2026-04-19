@@ -1,0 +1,111 @@
+{
+  "name": "HumanDataVerification",
+  "nodes": [
+    {
+      "id": 1,
+      "type": "SPLITTER",
+      "start": true
+    },
+    {
+      "id": 2,
+      "type": "API_CALL",
+      "config": {
+        "url": "https://cleaner.dadata.ru/api/v1/clean/passport",
+        "method": "POST",
+        "target_field": "passport",
+        "custom_headers": "Authorization=Token 5558f167f2d81e7c03b1426897cb8387b9c3fc0f,X-Secret=e30d3a9795e1af25a011c826535c074d4532b73f",
+        "response_strategy": "MERGE_SELECTIVE",
+        "response_mapping": "passport_qc=0.qc, passport=0.source"
+      }
+    },
+    {
+      "id": 3,
+      "type": "API_CALL",
+      "config": {
+        "url": "https://cleaner.dadata.ru/api/v1/clean/phone",
+        "method": "POST",
+        "target_field": "phone_source",
+        "custom_headers": "Authorization=Token 5558f167f2d81e7c03b1426897cb8387b9c3fc0f,X-Secret=e30d3a9795e1af25a011c826535c074d4532b73f",
+        "response_strategy": "MERGE_SELECTIVE",
+        "response_mapping": "phone_qc=0.qc,phone_type=0.type,phone_region=0.region"
+      }
+    },
+    {
+      "id": 4,
+      "type": "AGGREGATOR",
+      "config": {
+        "expected_count": "2"
+      }
+    },
+    {
+      "id": 5,
+      "type": "FILTER",
+      "config": {
+        "expression": "#payload['passport_qc'] == 0 and #payload['phone_qc'] == 0",
+        "ifFalse": "FINISH"
+      }
+    },
+    {
+      "id": 6,
+      "type": "API_CALL",
+      "config": {
+        "url": "http://localhost:8081/api/v1/scoring/check-passport",
+        "method": "POST",
+        "protocol": "RAW",
+        "content_type": "text/plain",
+        "target_field": "passport",
+        "response_strategy": "MERGE_SELECTIVE",
+        "response_mapping": "credit_decision=decision"
+      }
+    },
+    {
+      "id": 7,
+      "type": "FILTER",
+      "config": {
+        "expression": "#payload['credit_decision'] == 'APPROVED'",
+        "ifFalse": "FINISH"
+      }
+    },
+    {
+      "id": 8,
+      "type": "API_CALL",
+      "config": {
+        "url": "http://localhost:8082/ws/",
+        "method": "POST",
+        "protocol": "SOAP",
+        "soap_root_element": "getLoanRequest",
+        "soap_namespace": "http://example.org/loans",
+        "soap_prefix": "loan",
+        "response_strategy": "MERGE_SELECTIVE",
+        "response_mapping": "loan_contract=SOAP-ENV:Body.getLoanResponse.contractNumber,loan_status=SOAP-ENV:Body.getLoanResponse.status"
+      }
+    },
+    {
+      "id": 9,
+      "type": "FILTER",
+      "config": {
+        "expression": "#payload['loan_status'] == 'ISSUED'",
+        "ifFalse": "FINISH"
+      }
+    }
+  ],
+  "links": [
+    {
+      "fromNodeId": 1,
+      "toNodeId": 2,
+      "fieldMapping": { "doc_number": "passport", "contact_info": "phone_source" }
+    },
+    {
+      "fromNodeId": 1,
+      "toNodeId": 3,
+      "fieldMapping": { "doc_number": "passport", "contact_info": "phone_source" }
+    },
+    { "fromNodeId": 2, "toNodeId": 4 },
+    { "fromNodeId": 3, "toNodeId": 4 },
+    { "fromNodeId": 4, "toNodeId": 5 },
+    { "fromNodeId": 5, "toNodeId": 6 },
+    { "fromNodeId": 6, "toNodeId": 7 },
+    { "fromNodeId": 7, "toNodeId": 8 },
+    { "fromNodeId": 8, "toNodeId": 9 }
+  ]
+}

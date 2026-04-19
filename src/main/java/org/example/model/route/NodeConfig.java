@@ -1,60 +1,37 @@
 package org.example.model.route;
 
+import jakarta.persistence.*;
+import lombok.*;
 import java.util.Map;
+import java.util.UUID;
 
+@Entity
+@Table(name = "nodes")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class NodeConfig {
-    private String id;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "node_id", updatable = false, nullable = false)
+    private UUID technicalId;
+
+    @Column(name = "business_id")
+    private int id;
+
+    @Enumerated(EnumType.STRING)
     private NodeType type;
+
+    private boolean isStart;
+
+    @Column(name = "input_topic")
     private String inputTopic;
-    private Map<String, Object> config;
 
-    public NodeConfig() {}
-
-    public NodeConfig(String id, NodeType type, String inputTopic, Map<String, Object> config) {
-        this.id = id;
-        this.type = type;
-        this.inputTopic = inputTopic;
-        this.config = config;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public NodeType getType() {
-        return type;
-    }
-
-    public void setType(NodeType type) {
-        this.type = type;
-    }
-
-    public Map<String, Object> getConfig() {
-        return config;
-    }
-
-    public void setConfig(Map<String, Object> config) {
-        this.config = config;
-    }
-
-    public String getInputTopic() {
-        return inputTopic;
-    }
-
-    public void setInputTopic(String inputTopic) {
-        this.inputTopic = inputTopic;
-    }
-
-    @Override
-    public String toString() {
-        return "NodeConfig{" +
-                "id='" + id + '\'' +
-                ", type=" + type +
-                ", config=" + config +
-                '}';
-    }
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "node_config_params",
+            joinColumns = @JoinColumn(name = "node_id")
+    )
+    @MapKeyColumn(name = "param_key")
+    @Column(name = "param_value")
+    private Map<String, String> config;
 }

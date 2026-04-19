@@ -12,5 +12,8 @@ public enum NodeType {
     BATCH_BUILDER,  // Сбор сообщений в пачку
     BATCH_SPLITTER, // Разбор пачки
     MERGER,         // Объединение потоков
-    SINK;           // Финальный выход маршрута
+    SINK,           // Финальный выход маршрута
+    BROADCAST,
+    LOG,
+    API_CALL
 }

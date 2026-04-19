@@ -13,9 +13,9 @@ public class MappingTest {
                     "body", "content"
             );
 
-            String transformed = MessageMapper.applyMapping(originalJson, fieldMapping);
+            //String transformed = MessageMapper.applyMapping(originalJson, fieldMapping);
             System.out.println(originalJson);
-            System.out.println(transformed);
+            //System.out.println(transformed);
         } catch (Exception e) {
             e.printStackTrace();
         }

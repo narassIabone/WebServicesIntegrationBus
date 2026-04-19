@@ -1,8 +1,6 @@
-create table messages
-(
-    id        text         default nextval('messages_id_seq'::regclass) not null
-        primary key,
-    payload   text                                                      not null,
-    status    varchar(255) default false,
-    timestamp timestamp(6)
+CREATE TABLE messages (
+                          id        VARCHAR(255) PRIMARY KEY, -- Временно оставляем VARCHAR, его изменит V4
+                          payload   TEXT NOT NULL,
+                          status    VARCHAR(255),
+                          timestamp TIMESTAMP(6)
 );
