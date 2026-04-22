@@ -1,5 +1,6 @@
 package org.example.engine.executor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.example.model.route.NodeConfig;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
 public class RouteAdminService {
 
@@ -28,17 +29,18 @@ public class RouteAdminService {
     }
 
     public void prepareRouteConfig(RouteConfig route) {
+        log.info("[Admin] Подготовка инфраструктуры для маршрута: {} (ID: {})", route.getName(), route.getId());
+
         String routeName = route.getName() != null ? route.getName() : "default";
         Set<String> topicsToCreate = new HashSet<>();
 
-        // 1. Помечаем стартовый узел
         for (NodeConfig node : route.getNodes()) {
             if (node.isStart()) {
                 node.setInputTopic(inboundTopic);
+                log.debug("[Admin] Узел {} помечен как стартовый. Входной топик: {}", node.getId(), inboundTopic);
             }
         }
 
-        // 2. Генерируем топики и собираем их в список
         for (RouteLink link : route.getLinks()) {
             String generatedTopic = String.format("route.%s.%s.to.%s",
                     routeName,
@@ -46,7 +48,8 @@ public class RouteAdminService {
                     link.getToNodeId());
 
             link.setOutputTopic(generatedTopic);
-            topicsToCreate.add(generatedTopic); // Добавляем в очередь на создание
+            topicsToCreate.add(generatedTopic);
+            topicsToCreate.add(generatedTopic + "-retry");
 
             route.getNodes().stream()
                     .filter(n -> n.getId() == link.getToNodeId())
@@ -54,21 +57,27 @@ public class RouteAdminService {
                     .ifPresent(targetNode -> targetNode.setInputTopic(generatedTopic));
         }
 
-        // 3. Создаем топики в Kafka
+        log.info("[Admin] Сформирован список из {} топиков для создания", topicsToCreate.size());
         createTopicsInKafka(topicsToCreate);
     }
 
     private void createTopicsInKafka(Set<String> topics) {
+        if (topics.isEmpty()) {
+            log.warn("[Admin] Список топиков пуст, создание не требуется");
+            return;
+        }
+
         try (AdminClient adminClient = AdminClient.create(kafkaAdmin.getConfigurationProperties())) {
             List<NewTopic> newTopics = topics.stream()
-                    .map(topic -> new NewTopic(topic, 1, (short) 1)) // 1 партиция, 1 реплика
+                    .map(topic -> new NewTopic(topic, 1, (short) 1))
                     .collect(Collectors.toList());
 
             adminClient.createTopics(newTopics).all().get();
-            // .get() заставит подождать, пока Kafka подтвердит создание
+            log.info("[Admin] Топики успешно созданы/проверены в Kafka: {}", topics);
+
         } catch (Exception e) {
-            // В НИР/ВКР стоит упомянуть, что здесь можно ловить TopicExistsException
-            System.err.println("Ошибка при создании топиков: " + e.getMessage());
+            log.error("[Error] Критический сбой при создании топиков в Kafka: {}", e.getMessage(), e);
+            throw new RuntimeException("Infrastructure preparation failed", e);
         }
     }
 }

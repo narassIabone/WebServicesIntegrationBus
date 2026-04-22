@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message, String> {
-    // Здесь уже есть методы save(), findById(), findAll() и т.д.
+
 }

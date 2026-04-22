@@ -1,7 +1,9 @@
 package org.example.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.config.KafkaProducerService;
 import org.example.model.core.Message;
+import org.example.model.core.MessageStatus;
 import org.example.model.route.RouteConfig;
 import org.example.repository.MessageRepository;
 import org.example.repository.RouteRepository;
@@ -10,7 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 import java.util.UUID;
+import java.util.HashMap;
+import java.time.Instant;
 
+@Slf4j
 @Service
 public class MessageIngestionService {
 
@@ -31,24 +36,30 @@ public class MessageIngestionService {
 
     @Transactional
     public String processInboundMessage(Map<String, Object> request) {
-        Object payloadObj = request.get("payload");
         String routeName = (String) request.get("routeName");
+        Object payloadObj = request.get("payload");
+
+        log.info("[Ingestion] Получен новый запрос на маршрут: {}", routeName);
 
         if (payloadObj == null || routeName == null) {
+            log.warn("[Error] Некорректный запрос: отсутствует payload или routeName");
             throw new IllegalArgumentException("Payload and routeName are required");
         }
 
         RouteConfig route = routeRepository.findByName(routeName)
-                .orElseThrow(() -> new IllegalArgumentException("Route not found: " + routeName));
+                .orElseThrow(() -> {
+                    log.error("[Error] Маршрут '{}' не зарегистрирован в системе", routeName);
+                    return new IllegalArgumentException("Route not found: " + routeName);
+                });
 
         Message message = Message.builder()
                 .id(UUID.randomUUID())
                 .routeId(route.getId())
                 .payload(payloadObj.toString())
-                .status(org.example.model.core.MessageStatus.NEW)
-                .createdAt(java.time.Instant.now())
-                .headers(new java.util.HashMap<>())
-                .context(new java.util.HashMap<>())
+                .status(MessageStatus.NEW)
+                .createdAt(Instant.now())
+                .headers(new HashMap<>())
+                .context(new HashMap<>())
                 .build();
 
         Map<String, Object> headers = (Map<String, Object>) request.get("headers");
@@ -56,9 +67,17 @@ public class MessageIngestionService {
             message.getHeaders().putAll(headers);
         }
 
+        // 4. Сохранение и отправка
         messageRepository.save(message);
+        log.info("[Ingestion] Сообщение {} успешно сохранено в БД. Отправка в топик {}", message.getId(), inboundTopic);
 
-        kafkaProducerService.route(message, inboundTopic);
+        try {
+            kafkaProducerService.route(message, inboundTopic);
+        } catch (Exception e) {
+            log.error("[Fatal] Сообщение {} сохранено в БД, но произошел сбой при отправке в Kafka: {}",
+                    message.getId(), e.getMessage());
+            throw e;
+        }
 
         return message.getId().toString();
     }

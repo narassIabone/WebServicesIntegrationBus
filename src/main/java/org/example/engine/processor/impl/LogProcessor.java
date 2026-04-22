@@ -4,8 +4,7 @@ import org.example.engine.processor.NodeProcessor;
 import org.example.engine.processor.ProcessorResult;
 import org.example.model.core.Message;
 import org.example.model.route.NodeConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,22 +16,28 @@ import java.util.Map;
  * * Поддерживаемые параметры в NodeConfig:
  * - prefix: Строка, которая будет выводиться в начале лога (дефолт: "LOG").
  */
+@Slf4j
 @Component("LOG")
 public class LogProcessor implements NodeProcessor {
-
-    private static final Logger log = LoggerFactory.getLogger(LogProcessor.class);
 
     @Override
     public ProcessorResult process(Message message, NodeConfig config) {
         Map<String, String> nodeParams = config.getConfig();
+        String customPrefix = (nodeParams != null) ? nodeParams.getOrDefault("prefix", "DEBUG") : "DEBUG";
 
-        String prefix = "LOG";
-        if (nodeParams != null && nodeParams.containsKey("prefix")) {
-            prefix = nodeParams.get("prefix");
+        log.info("[Node {} (LOG)] === {} ===", config.getId(), customPrefix);
+        log.info("[Node {} (LOG)] ID: {}", config.getId(), message.getId());
+        log.info("[Node {} (LOG)] Payload: {}", config.getId(), message.getPayload());
+
+        if (!message.getHeaders().isEmpty()) {
+            log.info("[Node {} (LOG)] Headers: {}", config.getId(), message.getHeaders());
         }
 
-        log.info("[{}] Received message: id={}, status={}", prefix, message.getId(), message.getStatus());
-        log.info("[{}] Payload: {}", prefix, message.getPayload());
+        if (!message.getContext().isEmpty()) {
+            log.info("[Node {} (LOG)] Context: {}", config.getId(), message.getContext());
+        }
+
+        log.info("[Node {} (LOG)] =======================", config.getId());
 
         return new ProcessorResult(List.of(
                 new ProcessorResult.OutboundEnvelope(message, null)

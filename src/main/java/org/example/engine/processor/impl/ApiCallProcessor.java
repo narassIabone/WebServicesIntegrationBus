@@ -1,5 +1,6 @@
 package org.example.engine.processor.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -82,6 +83,7 @@ import java.util.regex.Pattern;
  * - В Context сообщения записывается "{nodeId}.http_status" (код ответа API).
  * - Ответы XML (SOAP) автоматически приводятся к формату JSON.
  */
+@Slf4j
 @Component("API_CALL")
 public class ApiCallProcessor implements NodeProcessor {
 
@@ -97,7 +99,6 @@ public class ApiCallProcessor implements NodeProcessor {
     @Override
     public ProcessorResult process(Message message, NodeConfig config) {
         Map<String, String> params = config.getConfig();
-
         int timeoutMs = Integer.parseInt(params.getOrDefault("timeout", "5000"));
         WebClient webClient = createCustomWebClient(timeoutMs);
 
@@ -106,6 +107,10 @@ public class ApiCallProcessor implements NodeProcessor {
         String protocol = params.getOrDefault("protocol", "REST").toUpperCase();
         String targetFields = params.get("target_field");
         String filteredPayload = filterPayload(message.getPayload(), targetFields);
+
+        // Логируем исходящий запрос
+        log.info("[Node {} (API_CALL)] Вызов внешнего сервиса [{}]: {} {}",
+                config.getId(), protocol, method, finalUrl);
 
         try {
             var responseEntity = webClient.method(HttpMethod.valueOf(method))
@@ -122,48 +127,71 @@ public class ApiCallProcessor implements NodeProcessor {
                     .block();
 
             if (responseEntity != null) {
-                String statusKey = config.getId() + ".http_status";
                 String statusCode = String.valueOf(responseEntity.getStatusCode().value());
-                message.getContext().put(statusKey, statusCode);
                 String responseBody = responseEntity.getBody();
-                handleResponseData(message, responseBody, params);
+
+                // Сохраняем статус в контекст
+                message.getContext().put(config.getId() + ".http_status", statusCode);
+
+                // КЛЮЧЕВОЙ ЛОГ: Ответ от API
+                log.info("[Node {} (API_CALL)] Получен ответ (Status: {}). Body: {}",
+                        config.getId(), statusCode, responseBody);
+
+                handleResponseData(message, responseBody, params, config.getId());
             }
 
             return ProcessorResult.builder()
                     .envelope(ProcessorResult.OutboundEnvelope.builder()
                             .message(message)
-                            .targetNodeId(null)
                             .build())
                     .build();
 
         } catch (Exception e) {
-            String errorMsg = e.getMessage() != null ? e.getMessage() : "Unknown error";
-
-            // 1. Сетевые проблемы
-            if (e instanceof java.net.SocketTimeoutException ||
-                    e.getCause() instanceof java.net.ConnectException ||
-                    errorMsg.contains("Timeout")) {
-                throw new RetryableException("Сетевой таймаут: " + errorMsg);
-            }
-
-            // 2. Ошибки сервера (5xx)
-            if (errorMsg.contains("500") || errorMsg.contains("502") || errorMsg.contains("503") || errorMsg.contains("504")) {
-                throw new RetryableException("Временная ошибка сервера (5xx): " + errorMsg);
-            }
-
-            // 3. Ошибки авторизации
-            if (errorMsg.contains("401") || errorMsg.contains("403")) {
-                throw new FatalException("Ошибка доступа (401/403): " + errorMsg);
-            }
-
-            // 4. Ошибки клиента (4xx)
-            if (errorMsg.contains("400") || errorMsg.contains("404") || errorMsg.contains("405")) {
-                throw new FatalException("Некорректный запрос (4xx): " + errorMsg);
-            }
-
-            // 5. Все остальное (включая ошибки трансформации)
-            throw new FatalException("Критическая ошибка при вызове API: " + errorMsg);
+            handleException(e, config.getId());
+            return null; // unreachable, handleException бросает runtime exception
         }
+    }
+
+    private void handleResponseData(Message message, String responseBody, Map<String, String> params, int nodeId) {
+        String strategy = params.getOrDefault("response_strategy", "OVERRIDE").toUpperCase();
+        String protocol = params.getOrDefault("protocol", "REST").toUpperCase();
+        String processedResponse = responseBody;
+
+        if ("SOAP".equals(protocol) || isXml(responseBody)) {
+            try {
+                processedResponse = convertXmlToJson(responseBody, params);
+                log.debug("[Node {} (API_CALL)] XML успешно сконвертирован в JSON", nodeId);
+            } catch (Exception e) {
+                log.error("[Error] Ошибка конвертации XML для ноды {}: {}", nodeId, e.getMessage());
+            }
+        }
+
+        log.debug("[Node {} (API_CALL)] Применение стратегии сохранения: {}", nodeId, strategy);
+
+        switch (strategy) {
+            case "MERGE_FULL" -> message.setPayload(mergeFull(message.getPayload(), processedResponse));
+            case "MERGE_SELECTIVE" -> {
+                String mapping = params.get("response_mapping");
+                message.setPayload(mergeSelective(message.getPayload(), processedResponse, mapping));
+            }
+            default -> message.setPayload(processedResponse);
+        }
+    }
+
+    private void handleException(Exception e, int nodeId) {
+        String errorMsg = e.getMessage() != null ? e.getMessage() : "Unknown error";
+        log.error("[Error] Сбой внешнего вызова в ноде {}: {}", nodeId, errorMsg);
+
+        if (e instanceof java.net.SocketTimeoutException || e.getCause() instanceof java.net.ConnectException || errorMsg.contains("Timeout")) {
+            throw new RetryableException("Сетевой таймаут: " + errorMsg);
+        }
+        if (errorMsg.contains("500") || errorMsg.contains("502") || errorMsg.contains("503") || errorMsg.contains("504")) {
+            throw new RetryableException("Временная ошибка сервера (5xx): " + errorMsg);
+        }
+        if (errorMsg.contains("401") || errorMsg.contains("403")) {
+            throw new FatalException("Ошибка доступа (401/403): " + errorMsg);
+        }
+        throw new FatalException("Критическая ошибка API: " + errorMsg);
     }
 
     private String filterPayload(String originalPayload, String targetFields) {
@@ -206,30 +234,6 @@ public class ApiCallProcessor implements NodeProcessor {
                     headers.set(headerName, headerValue);
                 }
             }
-        }
-    }
-
-    private void handleResponseData(Message message, String responseBody, Map<String, String> params) {
-        String strategy = params.getOrDefault("response_strategy", "OVERRIDE").toUpperCase();
-        String protocol = params.getOrDefault("protocol", "REST").toUpperCase();
-        String processedResponse = responseBody;
-
-        if ("SOAP".equals(protocol) || isXml(responseBody)) {
-            try {
-                processedResponse = convertXmlToJson(responseBody, params);
-                System.out.println("[API_CALL] Ответ после конвертации из XML в JSON: " + processedResponse);
-            } catch (Exception e) {
-                System.err.println("[API_CALL] XML conversion failed: " + e.getMessage());
-            }
-        }
-
-        switch (strategy) {
-            case "MERGE_FULL" -> message.setPayload(mergeFull(message.getPayload(), processedResponse));
-            case "MERGE_SELECTIVE" -> {
-                String mapping = params.get("response_mapping");
-                message.setPayload(mergeSelective(message.getPayload(), processedResponse, mapping));
-            }
-            default -> message.setPayload(processedResponse);
         }
     }
 

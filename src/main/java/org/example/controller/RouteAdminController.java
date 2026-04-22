@@ -22,11 +22,11 @@ public class RouteAdminController {
 
     @PostMapping
     public ResponseEntity<RouteConfig> saveRoute(@RequestBody RouteConfig routeConfig) {
+        if (routeConfig.getId() == null) routeConfig.setId(UUID.randomUUID());
+
         routeAdminService.prepareRouteConfig(routeConfig);
         RouteConfig saved = routeRepository.save(routeConfig);
-
         routeCacheService.refresh();
-
         return ResponseEntity.ok(saved);
     }
 
@@ -36,9 +36,8 @@ public class RouteAdminController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRoute(@PathVariable String id) {
-        UUID uuid = UUID.fromString(id);
-        routeRepository.deleteById(uuid);
+    public ResponseEntity<Void> deleteRoute(@PathVariable UUID id) {
+        routeRepository.deleteById(id);
         routeCacheService.refresh();
         return ResponseEntity.noContent().build();
     }
@@ -50,12 +49,12 @@ public class RouteAdminController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RouteConfig> updateRoute(@PathVariable String id, @RequestBody RouteConfig routeConfig) {
-        UUID uuid = UUID.fromString(id);
-        if (!routeRepository.existsById(uuid)) {
+    public ResponseEntity<RouteConfig> updateRoute(@PathVariable UUID id, @RequestBody RouteConfig routeConfig) {
+        if (!routeRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
-        routeConfig.setId(uuid);
+
+        routeConfig.setId(id);
         routeAdminService.prepareRouteConfig(routeConfig);
         RouteConfig updated = routeRepository.save(routeConfig);
         routeCacheService.refresh();

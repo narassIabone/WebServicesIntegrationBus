@@ -17,7 +17,13 @@ public class KafkaProducerService {
     public void route(Message message, String topic) {
         kafkaAdminService.ensureTopicExists(topic);
 
-        log.info("[Kafka] Forwarding message {} to topic {}", message.getId(), topic);
-        kafkaTemplate.send(topic, message);
+        try {
+            log.info("[Kafka] Отправка сообщения {} в топик: {}", message.getId(), topic);
+            kafkaTemplate.send(topic, message);
+        } catch (Exception e) {
+            log.error("[Error] Ошибка при отправке сообщения {} в Kafka (топик: {}). Причина: {}",
+                    message.getId(), topic, e.getMessage());
+            throw e;
+        }
     }
 }

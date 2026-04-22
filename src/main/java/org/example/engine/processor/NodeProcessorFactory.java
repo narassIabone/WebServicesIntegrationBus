@@ -7,8 +7,6 @@ import java.util.Map;
 @Service
 public class NodeProcessorFactory {
 
-    // Spring сам найдет все реализации NodeProcessor и положит их сюда
-    // Ключ — имя бина (например "REST_CALL"), значение — сам объект
     private final Map<String, NodeProcessor> processors;
 
     public NodeProcessorFactory(Map<String, NodeProcessor> processors) {
