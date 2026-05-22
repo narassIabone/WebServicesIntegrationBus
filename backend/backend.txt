@@ -1,0 +1,3128 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: src/main/java/**/*.java, src/main/resources/*.yaml
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+src/main/java/org/example/config/KafkaAdminService.java
+src/main/java/org/example/config/KafkaConfig.java
+src/main/java/org/example/config/KafkaProducerService.java
+src/main/java/org/example/config/SecurityConfig.java
+src/main/java/org/example/controller/AuditController.java
+src/main/java/org/example/controller/MessageController.java
+src/main/java/org/example/controller/RouteAdminController.java
+src/main/java/org/example/controller/WebController.java
+src/main/java/org/example/engine/exception/FatalException.java
+src/main/java/org/example/engine/exception/RetryableException.java
+src/main/java/org/example/engine/executor/RetryHandler.java
+src/main/java/org/example/engine/executor/RouteAdminService.java
+src/main/java/org/example/engine/executor/RouteCacheService.java
+src/main/java/org/example/engine/executor/RouteExecutor.java
+src/main/java/org/example/engine/processor/impl/AggregatorProcessor.java
+src/main/java/org/example/engine/processor/impl/ApiCallProcessor.java
+src/main/java/org/example/engine/processor/impl/FilterProcessor.java
+src/main/java/org/example/engine/processor/impl/LogProcessor.java
+src/main/java/org/example/engine/processor/impl/SplitterProcessor.java
+src/main/java/org/example/engine/processor/NodeProcessor.java
+src/main/java/org/example/engine/processor/NodeProcessorFactory.java
+src/main/java/org/example/engine/processor/ProcessorResult.java
+src/main/java/org/example/Main.java
+src/main/java/org/example/model/core/Message.java
+src/main/java/org/example/model/core/MessageStatus.java
+src/main/java/org/example/model/core/User.java
+src/main/java/org/example/model/dto/AuditData.java
+src/main/java/org/example/model/dto/RouteStatDTO.java
+src/main/java/org/example/model/entity/AggregationResult.java
+src/main/java/org/example/model/entity/MessageAudit.java
+src/main/java/org/example/model/entity/RouteUiMetadata.java
+src/main/java/org/example/model/route/NodeConfig.java
+src/main/java/org/example/model/route/NodeType.java
+src/main/java/org/example/model/route/RouteConfig.java
+src/main/java/org/example/model/route/RouteLink.java
+src/main/java/org/example/repository/AggregationRepository.java
+src/main/java/org/example/repository/MessageAuditRepository.java
+src/main/java/org/example/repository/MessageRepository.java
+src/main/java/org/example/repository/RouteRepository.java
+src/main/java/org/example/repository/RouteUiMetadataRepository.java
+src/main/java/org/example/repository/UserRepository.java
+src/main/java/org/example/service/AggregationService.java
+src/main/java/org/example/service/AuditService.java
+src/main/java/org/example/service/CustomUserDetailsService.java
+src/main/java/org/example/service/MessageIngestionService.java
+src/main/java/org/example/service/MessageService.java
+src/main/java/org/example/service/TimeRangeService.java
+src/main/java/org/example/service/transformer/MessageMapper.java
+src/main/java/org/example/service/transformer/MessageTransformer.java
+src/main/java/org/example/test/HttpTestApp.java
+src/main/java/org/example/test/MappingTest.java
+src/main/java/org/example/test/MessageTestApp.java
+src/main/java/org/example/test/SoapTestApp.java
+src/main/java/org/example/util/FlywayMigration.java
+src/main/java/org/example/util/HibernateUtil.java
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="src/main/java/org/example/config/KafkaAdminService.java">
+package org.example.config;
+
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class KafkaAdminService {
+    private final AdminClient adminClient;
+
+    public KafkaAdminService(KafkaAdmin kafkaAdmin) {
+        this.adminClient = AdminClient.create(kafkaAdmin.getConfigurationProperties());
+    }
+
+    @PreDestroy
+    public void close() {
+        adminClient.close();
+    }
+
+    public void ensureTopicExists(String topicName) {
+        try {
+            Set<String> topics = adminClient.listTopics().names().get();
+
+            if (!topics.contains(topicName)) {
+                log.info("[Admin] Топик {} не найден. Создаю...", topicName);
+
+                NewTopic newTopic = new NewTopic(topicName, 1, (short) 1);
+                adminClient.createTopics(Collections.singleton(newTopic)).all().get();
+
+                log.info("[Admin] Топик {} успешно создан", topicName);
+                Thread.sleep(10000);
+            }
+        } catch (Exception e) {
+            log.error("[Admin] Ошибка при проверке/создании топика: {}", topicName, e);
+        }
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/config/KafkaConfig.java">
+package org.example.config;
+
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.example.model.core.Message;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.*;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JsonSerializer;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+@EnableKafka
+public class KafkaConfig {
+
+    @Value("${esb.runtime.concurrency:5}")
+    private int concurrency;
+
+    @Value("${spring.kafka.consumer.properties.metadata.max.age.ms:5000}")
+    private String metadataMaxAge;
+
+    private final String bootstrapServers = "localhost:9092";
+
+    // --- 1. Настройка Producer (Отправка сообщений) ---
+    @Bean
+    public ProducerFactory<String, Message> producerFactory() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        configProps.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 5000);
+        configProps.put(ProducerConfig.METADATA_MAX_AGE_CONFIG, metadataMaxAge);
+
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    @Bean
+    public KafkaTemplate<String, Message> kafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory());
+    }
+
+    // --- 2. Настройка Consumer (Прием сообщений) ---
+    @Bean
+    public ConsumerFactory<String, Message> consumerFactory() {
+        JsonDeserializer<Message> deserializer = new JsonDeserializer<>(Message.class);
+        deserializer.addTrustedPackages("*");
+        deserializer.setUseTypeHeaders(false);
+
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "esb-runtime-group");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
+        props.put(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, true);
+        props.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, metadataMaxAge);
+
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, Message> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, Message> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        // Количество потоков для обработки. Позволяет обрабатывать сообщения из разных топиков параллельно.
+        factory.setConcurrency(concurrency);
+        return factory;
+    }
+
+    @Bean
+    public KafkaAdmin kafkaAdmin() {
+        Map<String, Object> configs = new HashMap<>();
+        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        return new KafkaAdmin(configs);
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/config/KafkaProducerService.java">
+package org.example.config;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.model.core.Message;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class KafkaProducerService {
+
+    private final KafkaTemplate<String, Message> kafkaTemplate;
+    private final KafkaAdminService kafkaAdminService;
+
+    public void route(Message message, String topic) {
+        kafkaAdminService.ensureTopicExists(topic);
+
+        try {
+            log.info("[Kafka] Отправка сообщения {} в топик: {}", message.getId(), topic);
+            kafkaTemplate.send(topic, message);
+        } catch (Exception e) {
+            log.error("[Error] Ошибка при отправке сообщения {} в Kafka (топик: {}). Причина: {}",
+                    message.getId(), topic, e.getMessage());
+            throw e;
+        }
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/config/SecurityConfig.java">
+package org.example.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+@Configuration
+public class SecurityConfig {
+
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("--- SECURITY CONFIG LOADED ---");
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            if (request.getServletPath().startsWith("/api/")) {
+                                response.sendError(401, "Unauthorized");
+                            } else {
+                                response.sendRedirect("/login");
+                            }
+                        })
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/login", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/index", true)
+                        .permitAll()
+                );
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of(allowedOrigins));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/controller/AuditController.java">
+package org.example.controller;
+
+import lombok.RequiredArgsConstructor;
+import org.example.model.dto.RouteStatDTO;
+import org.example.model.dto.MessageAudit;
+import org.example.repository.MessageAuditRepository;
+import org.example.service.TimeRangeService;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/admin/audit")
+@RequiredArgsConstructor
+public class AuditController {
+
+    private final MessageAuditRepository auditRepository;
+    private final TimeRangeService timeRangeService;
+
+    @GetMapping("/stats/details")
+    public Map<String, Object> getFullStats(
+            @RequestParam(required = false) String range,
+            @RequestParam(required = false) String start,
+            @RequestParam(required = false) String end) {
+
+        // 1. Получаем диапазон дат
+        var dates = timeRangeService.getDates(range, start, end);
+
+        // 2. Считаем summary (карточки)
+        Map<String, Long> summary = Map.of(
+                "total", auditRepository.countInRange(dates.from(), dates.to()),
+                "success", auditRepository.countByStatusInRange("SUCCESS", dates.from(), dates.to()),
+                "errors", auditRepository.countByStatusInRange("ERROR", dates.from(), dates.to())
+        );
+
+        // 3. Считаем среднюю задержку
+        Double avg = auditRepository.getAverageExecutionTimeInRange(dates.from(), dates.to());
+
+        // 4. Получаем и форматируем почасовую статистику (график)
+        List<Object[]> rawStats = auditRepository.getHourlyStatsInRange(dates.from(), dates.to());
+
+        List<Map<String, Object>> formattedStats = rawStats.stream().map(row -> {
+            Object dateObj = row[0];
+            LocalDateTime ldt;
+
+            if (dateObj instanceof java.sql.Timestamp) {
+                ldt = ((java.sql.Timestamp) dateObj).toLocalDateTime();
+            } else if (dateObj instanceof java.time.Instant) {
+                // Если пришел Instant, конвертируем его в LocalDateTime в системной зоне
+                ldt = LocalDateTime.ofInstant((java.time.Instant) dateObj, java.time.ZoneId.systemDefault());
+            } else if (dateObj instanceof LocalDateTime) {
+                ldt = (LocalDateTime) dateObj;
+            } else {
+                // На крайний случай, если тип совсем экзотический
+                ldt = LocalDateTime.now();
+            }
+
+            return Map.of(
+                    "time", ldt.format(DateTimeFormatter.ofPattern("dd.MM HH:mm")),
+                    "success", row[1] != null ? row[1] : 0,
+                    "errors", row[2] != null ? row[2] : 0
+            );
+        }).collect(Collectors.toList());
+
+        // 5. Собираем финальный ответ
+        return Map.of(
+                "summary", summary,
+                "avgLatency", avg != null ? Math.round(avg) : 0,
+                "nodeErrors", auditRepository.countErrorsByNodeTypeInRange(dates.from(), dates.to()),
+                "hourlyStats", formattedStats
+        );
+    }
+
+    @GetMapping("/stats/routes")
+    public List<RouteStatDTO> getRouteAnalytics(
+            @RequestParam(required = false) String range,
+            @RequestParam(required = false) String start,
+            @RequestParam(required = false) String end) {
+
+        var dates = timeRangeService.getDates(range, start, end);
+
+        List<Object[]> healthData = auditRepository.getRouteHealthDataInRange(dates.from(), dates.to());
+        List<Object[]> latencyData = auditRepository.getAverageLatencyByRouteInRange(dates.from(), dates.to());
+
+        return healthData.stream().map(row -> {
+            // Теперь в row[0] лежит routeName из вашего нового запроса в репозитории
+            String routeName = (row[0] != null) ? (String) row[0] : "Unknown Route";
+            long total = (long) row[1];
+            long errors = (long) row[2];
+
+            // Считаем % здоровья (избегаем деления на ноль)
+            double health = total > 0 ? ((double) (total - errors) / total) * 100 : 100;
+
+            // Ищем среднюю задержку в списке latencyData по ИМЕНИ (l[0])
+            double avgLat = latencyData.stream()
+                    .filter(l -> routeName.equals(l[0])) // Сравниваем строки-имена
+                    .findFirst()
+                    .map(l -> (Double) l[1])
+                    .orElse(0.0);
+
+            return new RouteStatDTO(
+                    null,         // ID теперь можно передать как null, если фронту достаточно имени
+                    routeName,    // Передаем реальное имя вместо "Route " + substring
+                    total,
+                    errors,
+                    Math.round(health),
+                    Math.round(avgLat)
+            );
+        }).collect(Collectors.toList());
+    }
+
+    @GetMapping("/incidents")
+    public List<MessageAudit> getRecentIncidents(
+            @RequestParam(required = false) String range,
+            @RequestParam(required = false) String start,
+            @RequestParam(required = false) String end) {
+
+        var dates = timeRangeService.getDates(range, start, end);
+
+        return auditRepository.findAllByStatusAndCreatedAtBetweenOrderByCreatedAtDesc(
+                "ERROR",
+                dates.from(),
+                dates.to()
+        );
+    }
+
+    @GetMapping("/messages")
+    public List<Map<String, Object>> getRecentMessages(
+            @RequestParam(defaultValue = "20") int limit) {
+        // Здесь желательно использовать кастомный запрос в репозитории (native query),
+        // чтобы получить последние уникальные trace_id с их статусом и временем.
+        // Для примера используем упрощенную логику через репозиторий:
+        return auditRepository.findRecentUniqueTraces(limit);
+    }
+
+    @GetMapping("/trace/{traceId}")
+    public List<MessageAudit> getTraceDetails(@PathVariable UUID traceId) {
+        return auditRepository.findAllByTraceIdOrderByCreatedAtAsc(traceId);
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/controller/MessageController.java">
+package org.example.controller;
+
+import org.example.service.MessageIngestionService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/messages")
+public class MessageController {
+
+    private final MessageIngestionService ingestionService;
+
+    public MessageController(MessageIngestionService ingestionService) {
+        this.ingestionService = ingestionService;
+    }
+
+    @PostMapping
+    public ResponseEntity<String> receiveMessage(@RequestBody Map<String, Object> request) {
+        try {
+            String messageId = ingestionService.processInboundMessage(request);
+            return ResponseEntity.ok("Message accepted. ID: " + messageId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Processing error: " + e.getMessage());
+        }
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/controller/RouteAdminController.java">
+package org.example.controller;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import lombok.RequiredArgsConstructor;
+import org.example.engine.executor.RouteAdminService;
+import org.example.engine.executor.RouteCacheService;
+import org.example.model.dto.RouteUiMetadata;
+import org.example.model.route.RouteConfig;
+import org.example.repository.RouteRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.example.repository.RouteUiMetadataRepository;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/admin/routes")
+@RequiredArgsConstructor
+public class RouteAdminController {
+
+    private final RouteRepository routeRepository;
+    private final RouteCacheService routeCacheService;
+    private final RouteAdminService routeAdminService;
+    private final RouteUiMetadataRepository uiMetadataRepository;
+
+    @PostMapping
+    public ResponseEntity<RouteConfig> saveRoute(@RequestBody RouteConfig routeConfig) {
+        if (routeConfig.getId() == null) routeConfig.setId(UUID.randomUUID());
+
+        routeAdminService.prepareRouteConfig(routeConfig);
+        RouteConfig saved = routeRepository.save(routeConfig);
+        routeCacheService.refresh();
+        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping
+    public List<RouteConfig> getAllRoutes() {
+        return routeRepository.findAll();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRoute(@PathVariable UUID id) {
+        routeRepository.deleteById(id);
+        routeCacheService.refresh();
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/cache/refresh")
+    public ResponseEntity<String> refreshCache() {
+        routeCacheService.refresh();
+        return ResponseEntity.ok("Cache refreshed successfully");
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<RouteConfig> updateRoute(@PathVariable UUID id, @RequestBody RouteConfig routeConfig) {
+        if (!routeRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        routeConfig.setId(id);
+        routeAdminService.prepareRouteConfig(routeConfig);
+        RouteConfig updated = routeRepository.save(routeConfig);
+        routeCacheService.refresh();
+        return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/{routeId}/metadata")
+    public ResponseEntity<JsonNode> getMetadata(@PathVariable UUID routeId) {
+        return uiMetadataRepository.findById(routeId)
+                .map(meta -> ResponseEntity.ok(meta.getLayoutData()))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{routeId}/metadata")
+    public ResponseEntity<Void> saveMetadata(
+            @PathVariable UUID routeId,
+            @RequestBody JsonNode layoutData) {
+
+        RouteUiMetadata metadata = new RouteUiMetadata(routeId, layoutData);
+        uiMetadataRepository.save(metadata);
+        return ResponseEntity.ok().build();
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/controller/WebController.java">
+package org.example.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class WebController {
+
+    @GetMapping("/login")
+    public String login() {
+        return "login"; // вернет login.html
+    }
+
+    @GetMapping("/index")
+    public String index() {
+        return "index"; // вернет index.html
+    }
+
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/index";
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/exception/FatalException.java">
+package org.example.engine.exception;
+
+public class FatalException extends RuntimeException {
+    public FatalException(String message) {
+        super(message);
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/exception/RetryableException.java">
+package org.example.engine.exception;
+
+public class RetryableException extends RuntimeException {
+    public RetryableException(String message) {
+        super(message);
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/executor/RetryHandler.java">
+package org.example.engine.executor;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.model.core.Message;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.stereotype.Component;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Слушатель для всех топиков повторных попыток (*-retry).
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class RetryHandler {
+
+    private final KafkaTemplate<String, Message> kafkaTemplate;
+
+    @KafkaListener(topicPattern = ".*-retry", groupId = "esb-retry-group")
+    public void handleRetry(Message message, @Header(KafkaHeaders.RECEIVED_TOPIC) String retryTopic) {
+        String retryCount = (String) message.getContext().getOrDefault("retry_count", "1");
+
+        log.info("[Retry] Получено сообщение {} для повтора (попытка №{}). Топик: {}",
+                message.getId(), retryCount, retryTopic);
+
+        try {
+            TimeUnit.SECONDS.sleep(5);
+
+            String originalTopic = retryTopic.replace("-retry", "");
+
+            log.info("[Retry] Возврат сообщения {} в основной поток обработки (топик: {})",
+                    message.getId(), originalTopic);
+
+            kafkaTemplate.send(originalTopic, message);
+
+        } catch (InterruptedException e) {
+            log.error("[Error] Прерывание ожидания ретрая для сообщения {}", message.getId(), e);
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            log.error("[Error] Не удалось вернуть сообщение {} в оригинальный топик", message.getId(), e);
+        }
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/executor/RouteAdminService.java">
+package org.example.engine.executor;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.example.model.route.NodeConfig;
+import org.example.model.route.RouteConfig;
+import org.example.model.route.RouteLink;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+public class RouteAdminService {
+
+    private final KafkaAdmin kafkaAdmin;
+
+    @Value("${app.kafka.topics.inbound:messages.new}")
+    private String inboundTopic;
+
+    public RouteAdminService(KafkaAdmin kafkaAdmin) {
+        this.kafkaAdmin = kafkaAdmin;
+    }
+
+    public void prepareRouteConfig(RouteConfig route) {
+        log.info("[Admin] Подготовка инфраструктуры для маршрута: {} (ID: {})", route.getName(), route.getId());
+
+        String routeName = route.getName() != null ? route.getName() : "default";
+        Set<String> topicsToCreate = new HashSet<>();
+
+        for (NodeConfig node : route.getNodes()) {
+            if (node.isStart()) {
+                node.setInputTopic(inboundTopic);
+                log.debug("[Admin] Узел {} помечен как стартовый. Входной топик: {}", node.getId(), inboundTopic);
+            }
+        }
+
+        for (RouteLink link : route.getLinks()) {
+            String generatedTopic = String.format("route.%s.%s.to.%s",
+                    routeName,
+                    link.getFromNodeId(),
+                    link.getToNodeId());
+
+            link.setOutputTopic(generatedTopic);
+            topicsToCreate.add(generatedTopic);
+            topicsToCreate.add(generatedTopic + "-retry");
+
+            route.getNodes().stream()
+                    .filter(n -> n.getId() == link.getToNodeId())
+                    .findFirst()
+                    .ifPresent(targetNode -> targetNode.setInputTopic(generatedTopic));
+        }
+
+        log.info("[Admin] Сформирован список из {} топиков для создания", topicsToCreate.size());
+        createTopicsInKafka(topicsToCreate);
+    }
+
+    private void createTopicsInKafka(Set<String> topics) {
+        if (topics.isEmpty()) {
+            log.warn("[Admin] Список топиков пуст, создание не требуется");
+            return;
+        }
+
+        try (AdminClient adminClient = AdminClient.create(kafkaAdmin.getConfigurationProperties())) {
+            Set<String> existingTopics = adminClient.listTopics().names().get();
+            List<NewTopic> newTopics = topics.stream()
+                    .filter(topic -> !existingTopics.contains(topic))
+                    .map(topic -> new NewTopic(topic, 1, (short) 1))
+                    .collect(Collectors.toList());
+
+            if (newTopics.isEmpty()) {
+                log.info("[Admin] Все необходимые топики уже существуют");
+                return;
+            }
+
+            adminClient.createTopics(newTopics).all().get();
+            log.info("[Admin] Новые топики успешно созданы: {}",
+                    newTopics.stream().map(NewTopic::name).collect(Collectors.toList()));
+
+        } catch (Exception e) {
+            if (e.getCause() instanceof org.apache.kafka.common.errors.TopicExistsException) {
+                log.info("[Admin] Топики были созданы параллельным процессом");
+            } else {
+                log.error("[Error] Критический сбой при создании топиков в Kafka: {}", e.getMessage(), e);
+                throw new RuntimeException("Infrastructure preparation failed", e);
+            }
+        }
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/executor/RouteCacheService.java">
+package org.example.engine.executor;
+
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.example.model.route.RouteConfig;
+import org.example.repository.RouteRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Slf4j
+@Service
+public class RouteCacheService {
+
+    private final RouteRepository routeRepository;
+    private final Map<UUID, RouteConfig> cache = new ConcurrentHashMap<>();
+
+    public RouteCacheService(RouteRepository routeRepository) {
+        this.routeRepository = routeRepository;
+    }
+
+    @PostConstruct
+    public void init() {
+        refresh();
+    }
+
+    public void refresh() {
+        log.info("[Cache] Синхронизация маршрутов из базы данных...");
+        try {
+            List<RouteConfig> routesFromDb = routeRepository.findAll();
+
+            Map<UUID, RouteConfig> freshData = new ConcurrentHashMap<>();
+            routesFromDb.stream()
+                    .filter(RouteConfig::isActive)
+                    .forEach(route -> freshData.put(route.getId(), route));
+
+            cache.keySet().retainAll(freshData.keySet());
+            cache.putAll(freshData);
+
+            log.info("[Cache] Успешно загружено активных маршрутов: {}", cache.size());
+        } catch (Exception e) {
+            log.error("[Error] Не удалось обновить кэш маршрутов: {}", e.getMessage());
+        }
+    }
+
+    public RouteConfig getRoute(UUID routeId) {
+        if (routeId == null) return null;
+
+        RouteConfig route = cache.get(routeId);
+        if (route == null) {
+            // Уровень warn, так как запрос несуществующего маршрута — это подозрительно
+            log.warn("[Cache] Запрошен отсутствующий маршрут с ID: {}", routeId);
+        }
+        return route;
+    }
+
+    public boolean containsRoute(UUID routeId) {
+        return routeId != null && cache.containsKey(routeId);
+    }
+
+    public void printCacheStatus() {
+        log.info("[Cache] Текущие ID в кэше: {}", cache.keySet());
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/executor/RouteExecutor.java">
+package org.example.engine.executor;
+
+import lombok.extern.slf4j.Slf4j;
+import org.example.engine.processor.NodeProcessor;
+import org.example.engine.processor.NodeProcessorFactory;
+import org.example.engine.processor.ProcessorResult;
+import org.example.model.core.Message;
+import org.example.model.enums.MessageStatus;
+import org.example.model.dto.AuditData;
+import org.example.model.route.NodeConfig;
+import org.example.model.route.RouteConfig;
+import org.example.model.route.RouteLink;
+import org.example.config.KafkaProducerService;
+import org.example.service.AuditService;
+import org.example.service.transformer.MessageMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.stereotype.Service;
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+public class RouteExecutor {
+
+    @Value("${app.kafka.topics.error:messages.error}")
+    private String errorTopic;
+
+    @Value("${app.kafka.topics.final:messages.delivered}")
+    private String finalTopic;
+
+    @Value("${app.kafka.topics.inbound:messages.new}")
+    private String inboundTopic;
+
+    @Value("${app.executor.max-retries:3}")
+    private int maxRetries;
+
+    private final RouteCacheService routeCache;
+    private final KafkaProducerService kafkaProducer;
+    private final NodeProcessorFactory processorFactory;
+    private final MessageMapper messageMapper;
+    private final AuditService auditService;
+
+    public RouteExecutor(RouteCacheService routeCache,
+                         KafkaProducerService kafkaProducer,
+                         NodeProcessorFactory processorFactory,
+                         MessageMapper messageMapper,
+                         AuditService auditService) {
+        this.routeCache = routeCache;
+        this.kafkaProducer = kafkaProducer;
+        this.processorFactory = processorFactory;
+        this.messageMapper = messageMapper;
+        this.auditService = auditService;
+    }
+
+    @KafkaListener(
+            topicPattern = "${app.kafka.topics.inbound:messages.new}|^(route\\.(?!.*-retry).*)$",
+            groupId = "esb-runtime-group"
+    )
+    public void execute(@Payload Message message,
+                        @Header(KafkaHeaders.RECEIVED_TOPIC) String currentTopic) {
+
+        log.info("[Runtime] Получено сообщение {} из топика: {}", message.getId(), currentTopic);
+
+        UUID traceId = initializeTraceId(message);
+        long startTime = System.currentTimeMillis();
+
+        // 1. Поиск конфигурации маршрута в кэше
+        RouteConfig route = routeCache.getRoute(message.getRouteId());
+        if (route == null) {
+            log.error("[Error] Маршрут с ID {} не найден. Обработка сообщения {} прервана.",
+                    message.getRouteId(), message.getId());
+            return;
+        }
+
+        // 2. Определение необходимого узла по входящему топику
+        NodeConfig currentNode = findNodeByInputTopic(route, currentTopic);
+        if (currentNode == null) {
+            log.error("[Error] Не найден узел для топика {} в маршруте {}. Сообщение: {}",
+                    currentTopic, route.getId(), message.getId());
+            return;
+        }
+
+        log.info("[Node {} ({})] Начало обработки сообщения {}. Полезная нагрузка: {}",
+                currentNode.getId(), currentNode.getType(), message.getId(), message.getPayload());
+
+        String payloadBefore = message.getPayload();
+
+        // 3. Маппинг сообщения перед обработкой узлом
+        applyMappingIfNecessary(message, route, currentNode);
+
+        // 4. Выполнение узла и маршрутизация
+        try {
+            NodeProcessor processor = processorFactory.getProcessor(currentNode.getType());
+            ProcessorResult result = processor.process(message, currentNode);
+
+            long duration = System.currentTimeMillis() - startTime;
+            sendAudit(traceId, message, currentNode, route.getId(), route.getName(), payloadBefore, duration, "SUCCESS", null);
+
+            for (ProcessorResult.OutboundEnvelope envelope : result.getEnvelopes()) {
+                Message msg = envelope.getMessage();
+                Integer explicitTarget = envelope.getTargetNodeId();
+
+                if (explicitTarget != null) {
+                    String targetTopic = findTopicToSpecificNode(route, currentNode.getId(), explicitTarget);
+                    log.info("[Node {} ({})] Прямая маршрутизация сообщения {} -> узел {} (топик: {})",
+                            currentNode.getId(), currentNode.getType(), msg.getId(), explicitTarget, targetTopic);
+                    kafkaProducer.route(msg, targetTopic);
+                } else {
+                    List<RouteLink> nextLinks = findAllNextLinks(route, currentNode.getId());
+
+                    for (int i = 0; i < nextLinks.size(); i++) {
+                        RouteLink link = nextLinks.get(i);
+                        Message messageToSend = (i < nextLinks.size() - 1) ? msg.copy() : msg;
+                        log.info("[Node {} ({})] Пересылка сообщения {} в следующий топик: {}",
+                                currentNode.getId(), currentNode.getType(), messageToSend.getId(), link.getOutputTopic());
+                        kafkaProducer.route(messageToSend, link.getOutputTopic());}
+
+                    if (nextLinks.isEmpty()) {
+                        finalizeRoute(msg);
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            handleProcessingError(message, currentNode, currentTopic, e, traceId, payloadBefore, duration, route.getId(), route.getName());
+        }
+    }
+
+    private void handleProcessingError(Message message, NodeConfig currentNode, String currentTopic,
+                                       Exception e, UUID traceId, String payloadBefore, long duration, UUID routeId, String routeName) {
+        Throwable cause = (e.getCause() != null) ? e.getCause() : e;
+
+        sendAudit(traceId, message, currentNode, routeId, routeName, payloadBefore, duration, "ERROR", cause.getMessage());
+        if (cause instanceof org.example.engine.exception.RetryableException) {
+            int currentRetry = Integer.parseInt(String.valueOf(message.getContext().getOrDefault("retry_count", "0")));
+
+            if (currentRetry < maxRetries) {
+                int nextRetry = currentRetry + 1;
+                message.getContext().put("retry_count", String.valueOf(nextRetry));
+                message.getContext().put("last_error", cause.getMessage());
+
+                String retryTopic = currentTopic + "-retry";
+                log.warn("[Retry] Попытка {}/{} для узла {}. Сообщение {} отправлено в {}",
+                        nextRetry, maxRetries, currentNode.getId(), message.getId(), retryTopic);
+                kafkaProducer.route(message, retryTopic);
+            } else {
+                sendToErrorQueue(message, "Превышено количество попыток: " + cause.getMessage(), currentNode);
+            }
+        } else {
+            log.error("[Fatal] Ошибка в узле {}: {}, Сообщение: {}",
+                    currentNode.getId(), cause.getMessage(), message.getId());
+            sendToErrorQueue(message, cause.getMessage(), currentNode);
+        }
+    }
+
+    private void applyMappingIfNecessary(Message message, RouteConfig route, NodeConfig currentNode) {
+        RouteLink incomingLink = findIncomingLink(route, currentNode);
+        if (incomingLink != null && incomingLink.getFieldMapping() != null && !incomingLink.getFieldMapping().isEmpty()) {
+            String oldPayload = message.getPayload();
+            String mappedPayload = prepareMessage(message, incomingLink);
+            message.setPayload(mappedPayload);
+
+            log.info("[Node {} ({})] Выполнен маппинг сообщения {}: данные изменены с [{}] на [{}]",
+                    currentNode.getId(), currentNode.getType(), message.getId(), oldPayload, mappedPayload);
+        } else {
+            log.debug("[Node {} ({})] Маппинг пропущен: правила трансформации не заданы",
+                    currentNode.getId(), currentNode.getType());
+        }
+    }
+
+    private void sendAudit(UUID traceId, Message message, NodeConfig node, UUID routeId, String routeName,
+                           String payloadBefore, long duration, String status, String error) {
+        auditService.logStep(AuditData.builder()
+                .traceId(traceId)
+                .messageId(message.getId())
+                .routeId(routeId)
+                .routeName(routeName)
+                .nodeId(node.getId())
+                .nodeType(node.getType().name())
+                .status(status)
+                .payloadBefore(payloadBefore)
+                .payloadAfter(message.getPayload())
+                .headers(new HashMap<>(message.getHeaders()))
+                .context(new HashMap<>(message.getContext()))
+                .nodeConfig(new HashMap<>(node.getConfig()))
+                .duration(duration)
+                .errorMessage(error)
+                .build());
+    }
+
+    private NodeConfig findNodeByInputTopic(RouteConfig route, String topic) {
+        return route.getLinks().stream()
+                .filter(link -> topic.equals(link.getOutputTopic()))
+                .findFirst()
+                .flatMap(link -> route.getNodes().stream()
+                        .filter(node -> node.getId() == link.getToNodeId())
+                        .findFirst())
+                .orElseGet(() -> route.getNodes().stream()
+                        .filter(node -> node.isStart() && topic.equals(inboundTopic))
+                        .findFirst()
+                        .orElse(null));
+    }
+
+    private String findTopicToSpecificNode(RouteConfig route, int fromId, int toId) {
+        return route.getLinks().stream()
+                .filter(l -> l.getFromNodeId() == fromId && l.getToNodeId() == toId)
+                .map(RouteLink::getOutputTopic)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Связи между узлами" + fromId + " и " + toId + " не существует."));
+    }
+
+    private RouteLink findIncomingLink(RouteConfig route, NodeConfig currentNode) {
+        return route.getLinks().stream()
+                .filter(l -> l.getToNodeId() == currentNode.getId())
+                .findFirst()
+                .orElse(null);
+    }
+
+    private List<RouteLink> findAllNextLinks(RouteConfig route, int currentNodeId) {
+        return route.getLinks().stream()
+                .filter(link -> link.getFromNodeId() == currentNodeId)
+                .collect(Collectors.toList());
+    }
+
+    private String prepareMessage(Message message, RouteLink link) {
+        try {
+            return messageMapper.applyMapping(message.getPayload(), link.getFieldMapping());
+        } catch (Exception e) {
+            log.error("[Mapping] Ошибка трансформации сообщения {}: {}", message.getId(), e.getMessage());
+            throw new RuntimeException("Mapping failed: " + e.getMessage(), e);
+        }
+    }
+
+    private void finalizeRoute(Message msg) {
+        msg.setStatus(MessageStatus.DELIVERED);
+        log.info("[Completed] Сообщение {} успешно доставлено в финальный топик {}",
+                msg.getId(), finalTopic);
+        kafkaProducer.route(msg, finalTopic);
+    }
+
+    private void sendToErrorQueue(Message message, String reason, NodeConfig currentNode) {
+        log.error("[Fatal] Сообщение {} перемещено в очередь ошибок {}. Причина: {}",
+                message.getId(), errorTopic, reason);
+
+        message.getContext().put("error_reason", reason);
+
+        if (currentNode != null) {
+            message.getContext().put("error_node_id", String.valueOf(currentNode.getId()));
+        }
+
+        kafkaProducer.route(message, errorTopic);
+    }
+
+    private UUID initializeTraceId(Message message) {
+        Object existingTraceId = message.getContext().get("trace_id");
+
+        if (existingTraceId == null) {
+            String newTraceId = UUID.randomUUID().toString();
+            message.getContext().put("trace_id", newTraceId);
+            return UUID.fromString(newTraceId);
+        }
+
+        return UUID.fromString(existingTraceId.toString());
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/processor/impl/AggregatorProcessor.java">
+package org.example.engine.processor.impl;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.example.engine.exception.FatalException;
+import org.example.engine.exception.RetryableException;
+import org.example.engine.processor.NodeProcessor;
+import org.example.engine.processor.ProcessorResult;
+import org.example.model.dto.AggregationResult;
+import org.example.model.core.Message;
+import org.example.model.route.NodeConfig;
+import org.example.service.AggregationService;
+import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.UUID;
+
+
+/**
+ * Процессор-агрегатор для объединения нескольких сообщений (фрагментов) в одно целое.
+ * Использует внешнее хранилище (PostgreSQL) для накопления данных до достижения заданного порога.
+ * --- ПАРАМЕТРЫ (NodeConfig params) ---
+ * - expected_count: Количество фрагментов, которое необходимо собрать для завершения группы (дефолт: 2).
+ */
+@Slf4j
+@Component("AGGREGATOR")
+public class AggregatorProcessor implements NodeProcessor {
+
+    private final AggregationService aggregationService;
+    private final ObjectMapper objectMapper;
+
+    public AggregatorProcessor(AggregationService aggregationService, ObjectMapper objectMapper) {
+        this.aggregationService = aggregationService;
+        this.objectMapper = objectMapper;
+    }
+
+    @Override
+    public ProcessorResult process(Message message, NodeConfig config) {
+        Object correlationObj = message.getContext().get("correlationId");
+        if (correlationObj == null) {
+            log.error("[Error] Агрегатор: отсутствует correlationId в сообщении {}", message.getId());
+            throw new FatalException("Aggregator: отсутствует correlationId в контексте сообщения " + message.getId());
+        }
+
+        UUID correlationId = UUID.fromString(correlationObj.toString());
+        int expectedCount = Integer.parseInt(config.getConfig().getOrDefault("expected_count", "2"));
+
+        log.info("[Node {} (AGGREGATOR)] Обработка фрагмента для группы {}. Ожидаем: {}",
+                config.getId(), correlationId, expectedCount);
+
+        AggregationResult result;
+        try {
+            result = aggregationService.addFragment(
+                    correlationId,
+                    message.getPayload(),
+                    message.getContext(),
+                    expectedCount
+            );
+        } catch (Exception e) {
+            log.warn("[Retry] Ошибка сохранения фрагмента в БД для группы {}: {}", correlationId, e.getMessage());
+            throw new RetryableException("Aggregator: ошибка при сохранении фрагмента в БД: " + e.getMessage());
+        }
+
+        log.info("[Node {} (AGGREGATOR)] Группа {}: получено {} из {}",
+                config.getId(), correlationId, result.getReceivedCount(), result.getExpectedCount());
+
+        if (result.getReceivedCount() >= result.getExpectedCount()) {
+            log.info("[Node {} (AGGREGATOR)] Группа {} ПОЛНОСТЬЮ СОБРАНА. Начинаем слияние данных.",
+                    config.getId(), correlationId);
+
+            message.setPayload(result.getRawPayloads());
+
+            try {
+                Map<String, Object> mergedContext = objectMapper.readValue(
+                        result.getRawContexts(),
+                        new TypeReference<Map<String, Object>>() {}
+                );
+                message.setContext(mergedContext);
+            } catch (Exception e) {
+                log.error("[Error] Не удалось десериализовать накопленный контекст для группы {}", correlationId);
+                throw new FatalException("Aggregator: не удалось распарсить накопленный контекст: " + e.getMessage());
+            }
+
+            try {
+                aggregationService.cleanUp(correlationId);
+                log.debug("[Node {} (AGGREGATOR)] Данные группы {} удалены из временного хранилища",
+                        config.getId(), correlationId);
+            } catch (Exception e) {
+                log.warn("[Error] Ошибка при очистке группы {}: {}", correlationId, e.getMessage());
+            }
+
+            return ProcessorResult.builder()
+                    .envelope(new ProcessorResult.OutboundEnvelope(message, null))
+                    .build();
+        }
+
+        log.info("[Node {} (AGGREGATOR)] Сообщение {} поглощено. Ожидаем остальные фрагменты группы {}.",
+                config.getId(), message.getId(), correlationId);
+
+        return ProcessorResult.builder().build();
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/processor/impl/ApiCallProcessor.java">
+package org.example.engine.processor.impl;
+
+import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.example.engine.exception.FatalException;
+import org.example.engine.exception.RetryableException;
+import org.example.engine.processor.NodeProcessor;
+import org.example.engine.processor.ProcessorResult;
+import org.example.model.core.Message;
+import org.example.model.route.NodeConfig;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import javax.xml.stream.XMLInputFactory;
+
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Универсальный процессор для выполнения внешних API-вызовов (REST, SOAP, HTTP RAW).
+ * Поддерживает динамическую подстановку параметров из Header и Context сообщения через {key}.
+ * Автоматически конвертирует XML-ответы в JSON для обеспечения единообразия данных в шине.
+ *
+ * --- ОБЩИЕ ПАРАМЕТРЫ (NodeConfig params) ---
+ * - url: [Required] URL адрес (поддерживает плейсхолдеры {key})
+ * - method: GET, POST, PUT, DELETE (дефолт: POST)
+ * - timeout: Таймаут в мс (дефолт: 5000)
+ * - protocol: REST, SOAP, RAW (дефолт: REST)
+ *
+ * --- УПРАВЛЕНИЕ ДАННЫМИ (PAYLOAD) ---
+ * - target_field: Поле или список полей для отправки во внешнюю систему.
+ * * Если указано одно поле (напр. "passport") — извлекается только его значение.
+ * * Если указано несколько (напр. "fio,birthday") — формируется новый JSON-объект.
+ * * Если пусто — отправляется весь текущий payload сообщения.
+ *
+ * --- УПРАВЛЕНИЕ ЗАГОЛОВКАМИ (HEADERS) ---
+ * - custom_headers: Дополнительные заголовки в формате "Key1=Value1,Key2=Value2".
+ * * Поддерживает плейсхолдеры (напр. "X-Request-ID={message_id},Authorization={my_token}").
+ * - content_type: Кастомный заголовок (для протокола RAW, напр. text/csv)
+ *
+ * --- ТИПЫ АВТОРИЗАЦИИ (auth_type) ---
+ * - auth_type = NONE: Без авторизации (дефолт)
+ * - auth_type = BEARER: Использует 'auth_token' (напр. {jwt_token})
+ * - auth_type = API_KEY: Использует 'api_key_name' (дефолт: X-API-Key) и 'api_key_value'
+ * - auth_type = BASIC: Использует 'auth_user' и 'auth_password'
+ *
+ * --- ПРОТОКОЛ SOAP ---
+ * (Автоматически оборачивает payload в Envelope и конвертирует XML-ответ в JSON)
+ * - soap_root_element: Имя корневого тега внутри SOAP Body (напр. "getLoanRequest")
+ * - soap_namespace: URI пространства имен (напр. "http://example.org/loans")
+ * - soap_prefix: Префикс для пространства имен (напр. "loan")
+ * - soap_action: Значение заголовка SOAPAction
+ * - is_namespace_aware: [boolean] Учет пространств имен при парсинге ответа (дефолт: false).
+ * * При false — автоматически удаляет префиксы из ключей JSON (напр. "ns2:status" -> "status").
+ *
+ * --- СТРАТЕГИИ СОХРАНЕНИЯ ОТВЕТА (response_strategy) ---
+ * - OVERRIDE: Ответ полностью заменяет текущий payload (дефолт)
+ * - MERGE_FULL: Создает структуру { "request": original, "response": api_result }
+ * - MERGE_SELECTIVE: Добавляет поля из ответа в оригинал согласно 'response_mapping'
+ * - response_mapping: Маппинг полей "куда=откуда" через запятую (напр. contract=Body.getResponse.id)
+ *
+ * --- ОБРАБОТКА ОШИБОК ---
+ * - RetryableException: Генерируется при таймаутах (SocketTimeout) и ошибках сервера (5xx).
+ * * Позволяет RouteExecutor выполнить повторную попытку через retry-топик.
+ * - FatalException: Генерируется при ошибках клиента (4xx), авторизации (401/403) и ошибках трансформации данных.
+ * * Сообщение немедленно перенаправляется в очередь ошибок (messages.error).
+ *
+ * --- РЕЗУЛЬТАТ РАБОТЫ ---
+ * - В Context сообщения записывается "{nodeId}.http_status" (код ответа API).
+ * - Ответы XML (SOAP) автоматически приводятся к формату JSON.
+ */
+@Slf4j
+@Component("API_CALL")
+public class ApiCallProcessor implements NodeProcessor {
+
+    private final WebClient.Builder webClientBuilder;
+    private final ObjectMapper objectMapper;
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([^}]+)\\}");
+
+    public ApiCallProcessor(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
+        this.webClientBuilder = webClientBuilder;
+        this.objectMapper = objectMapper;
+    }
+
+    @Override
+    public ProcessorResult process(Message message, NodeConfig config) {
+        Map<String, String> params = config.getConfig();
+        int timeoutMs = Integer.parseInt(params.getOrDefault("timeout", "5000"));
+        WebClient webClient = createCustomWebClient(timeoutMs);
+
+        String finalUrl = resolvePlaceholders(params.get("url"), message);
+        String method = params.getOrDefault("method", "POST").toUpperCase();
+        String protocol = params.getOrDefault("protocol", "REST").toUpperCase();
+        String targetFields = params.get("target_field");
+        String filteredPayload = filterPayload(message.getPayload(), targetFields);
+
+        // Логируем исходящий запрос
+        log.info("[Node {} (API_CALL)] Вызов внешнего сервиса [{}]: {} {}",
+                config.getId(), protocol, method, finalUrl);
+
+        try {
+            var responseEntity = webClient.method(HttpMethod.valueOf(method))
+                    .uri(java.net.URI.create(finalUrl))
+                    .headers(headers -> {
+                        setupStandardHeaders(headers, protocol, params);
+                        setupSecurityHeaders(headers, params, message);
+                        setupCustomHeaders(headers, params, message);
+                    })
+                    .bodyValue(preparePayload(protocol, filteredPayload, params))
+                    .retrieve()
+                    .toEntity(String.class)
+                    .timeout(Duration.ofMillis(timeoutMs))
+                    .block();
+
+            if (responseEntity != null) {
+                String statusCode = String.valueOf(responseEntity.getStatusCode().value());
+                String responseBody = responseEntity.getBody();
+
+                // Сохраняем статус в контекст
+                message.getContext().put(config.getId() + ".http_status", statusCode);
+
+                // КЛЮЧЕВОЙ ЛОГ: Ответ от API
+                log.info("[Node {} (API_CALL)] Получен ответ (Status: {}). Body: {}",
+                        config.getId(), statusCode, responseBody);
+
+                handleResponseData(message, responseBody, params, config.getId());
+            }
+
+            return ProcessorResult.builder()
+                    .envelope(ProcessorResult.OutboundEnvelope.builder()
+                            .message(message)
+                            .build())
+                    .build();
+
+        } catch (Exception e) {
+            handleException(e, config.getId());
+            return null; // unreachable, handleException бросает runtime exception
+        }
+    }
+
+    private void handleResponseData(Message message, String responseBody, Map<String, String> params, int nodeId) {
+        String strategy = params.getOrDefault("response_strategy", "OVERRIDE").toUpperCase();
+        String protocol = params.getOrDefault("protocol", "REST").toUpperCase();
+        String processedResponse = responseBody;
+
+        if ("SOAP".equals(protocol) || isXml(responseBody)) {
+            try {
+                processedResponse = convertXmlToJson(responseBody, params);
+                log.debug("[Node {} (API_CALL)] XML успешно сконвертирован в JSON", nodeId);
+            } catch (Exception e) {
+                log.error("[Error] Ошибка конвертации XML для ноды {}: {}", nodeId, e.getMessage());
+            }
+        }
+
+        log.debug("[Node {} (API_CALL)] Применение стратегии сохранения: {}", nodeId, strategy);
+
+        switch (strategy) {
+            case "MERGE_FULL" -> message.setPayload(mergeFull(message.getPayload(), processedResponse));
+            case "MERGE_SELECTIVE" -> {
+                String mapping = params.get("response_mapping");
+                message.setPayload(mergeSelective(message.getPayload(), processedResponse, mapping));
+            }
+            default -> message.setPayload(processedResponse);
+        }
+    }
+
+    private void handleException(Exception e, int nodeId) {
+        String errorMsg = e.getMessage() != null ? e.getMessage() : "Unknown error";
+        log.error("[Error] Сбой внешнего вызова в ноде {}: {}", nodeId, errorMsg);
+
+        if (e instanceof java.net.SocketTimeoutException || e.getCause() instanceof java.net.ConnectException || errorMsg.contains("Timeout")) {
+            throw new RetryableException("Сетевой таймаут: " + errorMsg);
+        }
+        if (errorMsg.contains("500") || errorMsg.contains("502") || errorMsg.contains("503") || errorMsg.contains("504")) {
+            throw new RetryableException("Временная ошибка сервера (5xx): " + errorMsg);
+        }
+        if (errorMsg.contains("401") || errorMsg.contains("403")) {
+            throw new FatalException("Ошибка доступа (401/403): " + errorMsg);
+        }
+        throw new FatalException("Критическая ошибка API: " + errorMsg);
+    }
+
+    private String filterPayload(String originalPayload, String targetFields) {
+        if (targetFields == null || targetFields.isBlank()) {
+            return originalPayload;
+        }
+
+        try {
+            JsonNode root = objectMapper.readTree(originalPayload);
+            String[] fields = targetFields.split(",");
+
+            if (fields.length == 1) {
+                JsonNode singleNode = root.get(fields[0].trim());
+                return singleNode != null ? objectMapper.writeValueAsString(singleNode) : "{}";
+            } else {
+                ObjectNode filteredNode = objectMapper.createObjectNode();
+                for (String field : fields) {
+                    String fieldName = field.trim();
+                    if (root.has(fieldName)) {
+                        filteredNode.set(fieldName, root.get(fieldName));
+                    }
+                }
+                return objectMapper.writeValueAsString(filteredNode);
+            }
+        } catch (Exception e) {
+            System.err.println("[API_CALL] Payload filtering failed: " + e.getMessage());
+            return originalPayload;
+        }
+    }
+
+    private void setupCustomHeaders(HttpHeaders headers, Map<String, String> params, Message message) {
+        String customHeadersStr = params.get("custom_headers");
+        if (customHeadersStr != null && !customHeadersStr.isBlank()) {
+            String[] pairs = customHeadersStr.split(",");
+            for (String pair : pairs) {
+                String[] kv = pair.split("=", 2);
+                if (kv.length == 2) {
+                    String headerName = kv[0].trim();
+                    String headerValue = resolvePlaceholders(kv[1].trim(), message);
+                    headers.set(headerName, headerValue);
+                }
+            }
+        }
+    }
+
+    private boolean isXml(String body) {
+        return body != null && (body.trim().startsWith("<") || body.trim().startsWith("<?xml"));
+    }
+
+    private String mergeFull(String original, String response) {
+        try {
+            ObjectNode root = objectMapper.createObjectNode();
+            root.set("request", parseToJson(original));
+            root.set("response", parseToJson(response));
+            return objectMapper.writeValueAsString(root);
+        } catch (Exception e) {
+            return "{\"error\": \"Merge failed\"}";
+        }
+    }
+
+    private String mergeSelective(String original, String response, String mapping) {
+        try {
+            JsonNode originalJson = parseToJson(original);
+            JsonNode responseJson = parseToJson(response);
+            if (!(originalJson instanceof ObjectNode)) return response;
+
+            ObjectNode resultNode = (ObjectNode) originalJson;
+            if (mapping != null && !mapping.isEmpty()) {
+                for (String pair : mapping.split(",")) {
+                    String[] parts = pair.split("=");
+                    if (parts.length == 2) {
+                        JsonNode valueNode = findNodeByPath(responseJson, parts[1].trim());
+                        if (valueNode != null) resultNode.set(parts[0].trim(), valueNode);
+                    }
+                }
+            }
+            return objectMapper.writeValueAsString(resultNode);
+        } catch (Exception e) { return original; }
+    }
+
+    private JsonNode findNodeByPath(JsonNode root, String path) {
+        JsonNode current = root;
+        for (String step : path.split("\\.")) {
+            if (current == null || current.isMissingNode()) return null;
+
+            if (current.isArray()) {
+                try {
+                    int index = Integer.parseInt(step);
+                    current = current.get(index);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            } else {
+                current = current.get(step);
+            }
+        }
+        return current;
+    }
+
+    private JsonNode parseToJson(String content) {
+        try { return objectMapper.readTree(content); }
+        catch (Exception e) { return objectMapper.getNodeFactory().textNode(content); }
+    }
+
+    private String convertXmlToJson(String xml, Map<String, String> params) {
+        try {
+            boolean isNamespaceAware = Boolean.parseBoolean(params.getOrDefault("is_namespace_aware", "false"));
+            XMLInputFactory inputFactory = XMLInputFactory.newFactory();
+            inputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, isNamespaceAware);
+
+            XmlMapper xmlMapper = new XmlMapper(inputFactory);
+            xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+            JsonNode node = xmlMapper.readValue(xml, JsonNode.class);
+            String json = objectMapper.writeValueAsString(node);
+
+            if (!isNamespaceAware) {
+                json = json.replaceAll("\"[a-zA-Z0-9]+:([^\"]+)\":", "\"$1\":");
+            }
+
+            return json;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private WebClient createCustomWebClient(int timeoutMs) {
+        org.springframework.web.util.DefaultUriBuilderFactory factory = new org.springframework.web.util.DefaultUriBuilderFactory();
+        factory.setEncodingMode(org.springframework.web.util.DefaultUriBuilderFactory.EncodingMode.NONE);
+        HttpClient httpClient = HttpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeoutMs)
+                .doOnConnected(conn -> conn
+                        .addHandlerLast(new ReadTimeoutHandler(timeoutMs, TimeUnit.MILLISECONDS))
+                        .addHandlerLast(new WriteTimeoutHandler(timeoutMs, TimeUnit.MILLISECONDS)));
+        return webClientBuilder.uriBuilderFactory(factory).clientConnector(new ReactorClientHttpConnector(httpClient)).build();
+    }
+
+    private String resolvePlaceholders(String template, Message message) {
+        if (template == null) return null;
+        Matcher matcher = PLACEHOLDER_PATTERN.matcher(template);
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            Object val = message.getHeaders().getOrDefault(key, message.getContext().get(key));
+            String value = (val != null) ? String.valueOf(val) : matcher.group(0);
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(value));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
+    private void setupSecurityHeaders(HttpHeaders headers, Map<String, String> params, Message message) {
+        String authType = params.getOrDefault("auth_type", "NONE").toUpperCase();
+        switch (authType) {
+            case "BEARER" -> headers.setBearerAuth(resolvePlaceholders(params.get("auth_token"), message));
+            case "API_KEY" -> headers.set(params.getOrDefault("api_key_name", "X-API-Key"), resolvePlaceholders(params.get("api_key_value"), message));
+            case "BASIC" -> headers.setBasicAuth(resolvePlaceholders(params.get("auth_user"), message), resolvePlaceholders(params.get("auth_password"), message));
+        }
+    }
+
+    private void setupStandardHeaders(HttpHeaders headers, String protocol, Map<String, String> params) {
+        if ("SOAP".equals(protocol)) headers.setContentType(MediaType.TEXT_XML);
+        else if ("RAW".equals(protocol)) headers.set(HttpHeaders.CONTENT_TYPE, params.getOrDefault("content_type", "text/plain"));
+        else headers.setContentType(MediaType.APPLICATION_JSON);
+    }
+
+    private String preparePayload(String protocol, String originalPayload, Map<String, String> params) {
+        if ("SOAP".equals(protocol)) {
+            try {
+                String root = params.getOrDefault("soap_root_element", "payload");
+                String ns = params.get("soap_namespace");
+                String prefix = params.get("soap_prefix");
+
+                String xmlBody = org.example.service.transformer.MessageTransformer.jsonToXml(
+                        originalPayload, root, ns, prefix
+                );
+
+                return String.format(
+                        "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                                "<soapenv:Body>%s</soapenv:Body></soapenv:Envelope>",
+                        xmlBody
+                );
+            } catch (Exception e) {
+                throw new FatalException("Ошибка трансформации данных для SOAP: " + e.getMessage());
+            }
+        }
+        return originalPayload;
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/processor/impl/FilterProcessor.java">
+package org.example.engine.processor.impl;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.config.KafkaProducerService;
+import org.example.engine.exception.FatalException;
+import org.example.engine.processor.NodeProcessor;
+import org.example.engine.processor.ProcessorResult;
+import org.example.model.core.Message;
+import org.example.model.route.NodeConfig;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.stereotype.Component;
+
+import java.util.Map;
+
+/**
+ * Процессор для логической фильтрации и управления потоком сообщений.
+ * Позволяет выполнять ветвление или остановку маршрута на основе условий (SpEL).
+ * * --- КОНФИГУРАЦИЯ (NodeConfig params) ---
+ * 1. expression: String (обязательно)
+ * SpEL-выражение. Доступные переменные: #payload, #headers, #context.
+ * Пример: "#context['2.http_status'] == '200' and #payload['amount'] > 100"
+ * * 2. ifFalse: String (дефолт: "CONTINUE")
+ * Определяет поведение, если условие НЕ выполнено:
+ * - "CONTINUE": (Вариант 1) Идти дальше по стандартным связям (links).
+ * - "DIVERGE":  (Вариант 2) Перейти в конкретную ноду, указанную в 'on_false_target_node'.
+ * - "FINISH":   (Вариант 3) Завершить маршрут. Сообщение отправляется в топик 'messages.delivered'.
+ * * 3. on_false_target_node: String (ID ноды)
+ * Используется только если ifFalse = "DIVERGE".
+ * * --- ТРАССИРОВКА (Context) ---
+ * В контекст сообщения всегда добавляются поля:
+ * - [nodeId].filter.result: "MATCHED" или "SKIPPED"
+ * - [nodeId].filter.expression: само проверяемое выражение
+ */
+
+@Slf4j
+@Component("FILTER")
+public class FilterProcessor implements NodeProcessor {
+
+    private final ObjectMapper objectMapper;
+    private final ExpressionParser parser = new SpelExpressionParser();
+    private final KafkaProducerService kafkaProducerService;
+
+    @Value("${app.kafka.topics.delivered:messages.delivered}")
+    private String deliveredTopic;
+
+    public FilterProcessor(ObjectMapper objectMapper, KafkaProducerService kafkaProducerService) {
+        this.objectMapper = objectMapper;
+        this.kafkaProducerService = kafkaProducerService;
+    }
+
+    @Override
+    public ProcessorResult process(Message message, NodeConfig config) {
+        Map<String, String> params = config.getConfig();
+        String expressionStr = params.get("expression");
+
+        if (expressionStr == null || expressionStr.isBlank()) {
+            log.error("[Error] Фильтр (Node {}): не задано выражение для проверки", config.getId());
+            throw new FatalException("Filter Node " + config.getId() + ": выражение (expression) не задано");
+        }
+
+        String ifFalseAction = params.getOrDefault("ifFalse", "CONTINUE");
+        String falseTargetNodeId = params.get("on_false_target_node");
+
+        log.info("[Node {} (FILTER)] Проверка условия: [{}]", config.getId(), expressionStr);
+
+        boolean isMatched;
+        try {
+            isMatched = evaluate(expressionStr, message, config.getId());
+        } catch (Exception e) {
+            log.error("[Error] Ошибка вычисления SpEL в ноде {}: {}", config.getId(), e.getMessage());
+            throw new FatalException("Ошибка вычисления фильтра [" + expressionStr + "]: " + e.getMessage());
+        }
+
+        String nodePrefix = config.getId() + ".filter";
+        message.getContext().put(nodePrefix + ".result", isMatched ? "MATCHED" : "SKIPPED");
+        message.getContext().put(nodePrefix + ".expression", expressionStr);
+
+        if (isMatched) {
+            log.info("[Node {} (FILTER)] Условие выполнено (MATCHED). Сообщение продолжает маршрут.", config.getId());
+            return ProcessorResult.builder()
+                    .envelope(new ProcessorResult.OutboundEnvelope(message, null))
+                    .build();
+        }
+
+        log.info("[Node {} (FILTER)] Условие НЕ выполнено (SKIPPED). Применяется действие: {}", config.getId(), ifFalseAction);
+
+        switch (ifFalseAction.toUpperCase()) {
+            case "CONTINUE":
+                return ProcessorResult.builder()
+                        .envelope(new ProcessorResult.OutboundEnvelope(message, null))
+                        .build();
+
+            case "DIVERGE":
+                if (falseTargetNodeId == null || falseTargetNodeId.isBlank()) {
+                    throw new FatalException("Filter Node " + config.getId() + ": отсутствует on_false_target_node для DIVERGE");
+                }
+                log.info("[Node {} (FILTER)] Дивергенция: перенаправление сообщения в узел {}", config.getId(), falseTargetNodeId);
+                return ProcessorResult.builder()
+                        .envelope(new ProcessorResult.OutboundEnvelope(message, Integer.parseInt(falseTargetNodeId)))
+                        .build();
+
+            case "FINISH":
+                log.info("[Node {} (FILTER)] Завершение маршрута согласно настройкам фильтра.", config.getId());
+                message.getContext().put(nodePrefix + ".exit_reason", "FILTER_FINISH");
+                kafkaProducerService.route(message, deliveredTopic);
+                return ProcessorResult.builder().build();
+
+            default:
+                throw new FatalException("Filter Node " + config.getId() + ": неизвестный action: " + ifFalseAction);
+        }
+    }
+
+    private boolean evaluate(String expressionStr, Message message, int nodeId) {
+        StandardEvaluationContext context = new StandardEvaluationContext();
+        context.setVariable("headers", message.getHeaders());
+        context.setVariable("context", message.getContext());
+
+        try {
+            Map<String, Object> payloadMap = objectMapper.readValue(
+                    message.getPayload(),
+                    new TypeReference<Map<String, Object>>() {}
+            );
+            context.setVariable("payload", payloadMap);
+        } catch (Exception e) {
+            log.debug("[Node {} (FILTER)] Payload не является JSON, используется как String", nodeId);
+            context.setVariable("payload", message.getPayload());
+        }
+
+        Expression exp = parser.parseExpression(expressionStr);
+        return Boolean.TRUE.equals(exp.getValue(context, Boolean.class));
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/processor/impl/LogProcessor.java">
+package org.example.engine.processor.impl;
+
+import org.example.engine.processor.NodeProcessor;
+import org.example.engine.processor.ProcessorResult;
+import org.example.model.core.Message;
+import org.example.model.route.NodeConfig;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Процессор для логирования прохождения сообщения через узел.
+ * Не изменяет payload, служит для отладки и мониторинга.
+ * * Поддерживаемые параметры в NodeConfig:
+ * - prefix: Строка, которая будет выводиться в начале лога (дефолт: "LOG").
+ */
+@Slf4j
+@Component("LOG")
+public class LogProcessor implements NodeProcessor {
+
+    @Override
+    public ProcessorResult process(Message message, NodeConfig config) {
+        Map<String, String> nodeParams = config.getConfig();
+        String customPrefix = (nodeParams != null) ? nodeParams.getOrDefault("prefix", "DEBUG") : "DEBUG";
+
+        log.info("[Node {} (LOG)] === {} ===", config.getId(), customPrefix);
+        log.info("[Node {} (LOG)] ID: {}", config.getId(), message.getId());
+        log.info("[Node {} (LOG)] Payload: {}", config.getId(), message.getPayload());
+
+        if (!message.getHeaders().isEmpty()) {
+            log.info("[Node {} (LOG)] Headers: {}", config.getId(), message.getHeaders());
+        }
+
+        if (!message.getContext().isEmpty()) {
+            log.info("[Node {} (LOG)] Context: {}", config.getId(), message.getContext());
+        }
+
+        log.info("[Node {} (LOG)] =======================", config.getId());
+
+        return new ProcessorResult(List.of(
+                new ProcessorResult.OutboundEnvelope(message, null)
+        ));
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/processor/impl/SplitterProcessor.java">
+package org.example.engine.processor.impl;
+
+import lombok.extern.slf4j.Slf4j;
+import org.example.engine.exception.FatalException;
+import org.example.engine.processor.NodeProcessor;
+import org.example.engine.processor.ProcessorResult;
+import org.example.model.core.Message;
+import org.example.model.route.NodeConfig;
+import org.springframework.stereotype.Component;
+
+/**
+ * Процессор для разделения (сплиттинга) входящего сообщения на несколько независимых сообщений.
+ * Добавляет поле correlationId в context для связи между разделенными сообщениями
+ */
+@Slf4j
+@Component("SPLITTER")
+public class SplitterProcessor implements NodeProcessor {
+
+    @Override
+    public ProcessorResult process(Message message, NodeConfig config) {
+        if (!message.getContext().containsKey("correlationId")) {
+            String correlationId = message.getId().toString();
+            message.getContext().put("correlationId", correlationId);
+            log.debug("[Node {} (SPLITTER)] Установлен Correlation ID: {}", config.getId(), correlationId);
+        }
+
+        try {
+            log.info("[Node {} (SPLITTER)] Подготовка сообщения {} к разделению/пробросу",
+                    config.getId(), message.getId());
+
+            return ProcessorResult.builder()
+                    .envelope(ProcessorResult.OutboundEnvelope.builder()
+                            .message(message)
+                            .targetNodeId(null)
+                            .build())
+                    .build();
+
+        } catch (Exception e) {
+            log.error("[Error] Сбой в работе Splitter (Node {}): {}", config.getId(), e.getMessage());
+            throw new FatalException("Splitter Node " + config.getId() + " failed: " + e.getMessage());
+        }
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/processor/NodeProcessor.java">
+package org.example.engine.processor;
+
+import org.example.model.core.Message;
+import org.example.model.route.NodeConfig;
+
+public interface NodeProcessor {
+    ProcessorResult process(Message message, NodeConfig config) throws Exception;
+}
+</file>
+
+<file path="src/main/java/org/example/engine/processor/NodeProcessorFactory.java">
+package org.example.engine.processor;
+
+import org.example.model.enums.NodeType;
+import org.springframework.stereotype.Service;
+import java.util.Map;
+
+@Service
+public class NodeProcessorFactory {
+
+    private final Map<String, NodeProcessor> processors;
+
+    public NodeProcessorFactory(Map<String, NodeProcessor> processors) {
+        this.processors = processors;
+    }
+
+    public NodeProcessor getProcessor(NodeType type) {
+        NodeProcessor processor = processors.get(type.name());
+        if (processor == null) {
+            throw new IllegalArgumentException("Процессор не найден для типа: " + type);
+        }
+        return processor;
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/engine/processor/ProcessorResult.java">
+package org.example.engine.processor;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
+import org.example.model.core.Message;
+
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@Builder
+public class ProcessorResult {
+
+    @Singular
+    private List<OutboundEnvelope> envelopes;
+
+    @Data
+    @AllArgsConstructor
+    @Builder
+    public static class OutboundEnvelope {
+        private Message message;
+        private Integer targetNodeId;
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/Main.java">
+package org.example;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
+
+@SpringBootApplication
+@EnableAsync
+public class Main {
+    public static void main(String[] args) {
+        SpringApplication.run(Main.class, args);
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/model/core/Message.java">
+package org.example.model.core;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import lombok.*;
+
+@Entity
+@Table(name = "messages")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class Message {
+
+    @Id
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "route_id", nullable = false)
+    private UUID routeId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private MessageStatus status;
+
+    @Column(name = "payload", columnDefinition = "TEXT")
+    private String payload;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "headers", columnDefinition = "jsonb")
+    private Map<String, Object> headers = new HashMap<>();
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "context", columnDefinition = "jsonb")
+    private Map<String, Object> context = new HashMap<>();
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "id='" + id + '\'' +
+                ", status=" + status +
+                ", createdAt=" + createdAt +
+                ", headers=" + headers +
+                '}';
+    }
+
+    public Message copy() {
+        return Message.builder()
+                .id(UUID.randomUUID())
+                .createdAt(this.createdAt)
+                .routeId(this.routeId)
+                .status(this.status)
+                .payload(this.payload)
+                .headers(new HashMap<>(this.headers))
+                .context(new HashMap<>(this.context))
+                .build();
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/model/core/MessageStatus.java">
+package org.example.model.core;
+
+public enum MessageStatus {
+    NEW,
+    PROCESSING,
+    DELIVERED,
+    ERROR,
+    SPLITTED,
+    FAILED
+}
+</file>
+
+<file path="src/main/java/org/example/model/core/User.java">
+package org.example.model.core;
+
+import jakarta.persistence.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Collection;
+import java.util.List;
+
+@Entity
+@Table(name = "users")
+public class User implements UserDetails {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String username;
+
+    @Column(nullable = false)
+    private String password;
+
+    private String role;
+
+    // Геттеры и сеттеры...
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role));
+    }
+
+    @Override public String getPassword() { return password; }
+    @Override public String getUsername() { return username; }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
+}
+</file>
+
+<file path="src/main/java/org/example/model/dto/AuditData.java">
+package org.example.model.dto;
+
+import lombok.Builder;
+import lombok.Getter;
+import java.util.Map;
+import java.util.UUID;
+
+@Getter
+@Builder
+public class AuditData {
+    private final UUID traceId;
+    private final UUID messageId;
+    private final UUID routeId;
+    private final Integer nodeId;
+    private final String nodeType;
+    private final String routeName;
+    private final String status;
+    private final String payloadBefore;
+    private final String payloadAfter;
+    private final Map<String, Object> headers;
+    private final Map<String, Object> context;
+    private final Map<String, Object> nodeConfig;
+    private final String errorMessage;
+    private final Long duration;
+}
+</file>
+
+<file path="src/main/java/org/example/model/dto/RouteStatDTO.java">
+package org.example.model.dto;
+
+import java.util.UUID;
+
+public record RouteStatDTO(
+        UUID id,
+        String name,
+        long count,
+        long errors,
+        long health,
+        long avgLatency
+) {}
+</file>
+
+<file path="src/main/java/org/example/model/entity/AggregationResult.java">
+package org.example.model.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class AggregationResult {
+    private final int receivedCount;
+    private final int expectedCount;
+    private final String rawPayloads;
+    private final String rawContexts;
+
+    public boolean isComplete() {
+        return receivedCount >= expectedCount;
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/model/entity/MessageAudit.java">
+package org.example.model.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.UUID;
+
+@Entity
+@Table(name = "message_audit")
+@Getter @Setter
+@Builder
+@NoArgsConstructor @AllArgsConstructor
+public class MessageAudit {
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @Id
+    private UUID id;
+
+    @Column(name = "message_id", nullable = false)
+    private UUID messageId;
+
+    @Column(name = "route_id", nullable = false)
+    private UUID routeId;
+
+    @Column(name = "route_name")
+    private String routeName;
+
+    @Column(name = "trace_id")
+    private UUID traceId;
+
+    @Column(name = "node_id", nullable = false)
+    private Integer nodeId;
+
+    @Column(name = "node_type")
+    private String nodeType;
+
+    @Column(nullable = false)
+    private String status;
+
+    @Column(columnDefinition = "TEXT")
+    private String payloadBefore;
+
+    @Column(columnDefinition = "TEXT")
+    private String payloadAfter;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "headers_snapshot")
+    private Map<String, Object> headersSnapshot;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "context_snapshot")
+    private Map<String, Object> contextSnapshot;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "node_config")
+    private Map<String, Object> nodeConfig;
+
+    @Column(name = "error_message")
+    private String errorMessage;
+
+    @Column(name = "execution_time_ms")
+    private Long executionTimeMs;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+}
+</file>
+
+<file path="src/main/java/org/example/model/entity/RouteUiMetadata.java">
+package org.example.model.entity;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
+
+@Entity
+@Table(name = "route_ui_metadata")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class RouteUiMetadata {
+
+    @Id
+    @Column(name = "route_id")
+    private UUID routeId;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "layout_data", columnDefinition = "jsonb")
+    private JsonNode layoutData;
+}
+</file>
+
+<file path="src/main/java/org/example/model/route/NodeConfig.java">
+package org.example.model.route;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.util.Map;
+import java.util.UUID;
+
+@Entity
+@Table(name = "nodes")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class NodeConfig {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "node_id", updatable = false, nullable = false)
+    private UUID technicalId;
+
+    @Column(name = "business_id")
+    private int id;
+
+    @Enumerated(EnumType.STRING)
+    private NodeType type;
+
+    private boolean isStart;
+
+    @Column(name = "input_topic")
+    private String inputTopic;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "node_config_params",
+            joinColumns = @JoinColumn(name = "node_id")
+    )
+    @MapKeyColumn(name = "param_key")
+    @Column(name = "param_value")
+    private Map<String, String> config;
+}
+</file>
+
+<file path="src/main/java/org/example/model/route/NodeType.java">
+package org.example.model.route;
+
+public enum NodeType {
+    SOURCE,         // Источник данных (Kafka topic, REST вход и т.д.)
+    VALIDATION,     // Проверка или фильтрация ++
+    SPLITTER,       // Разделение сообщений
+    AGGREGATOR,     // Сбор сообщений
+    FILTER,         // Пропуск по условию
+    REST_CALL,      // Вызов REST-сервиса ++
+    SOAP_CALL,      // Вызов SOAP-сервиса
+    HTTP_CALL,      // Вызов HTTP API ++
+    BATCH_BUILDER,  // Сбор сообщений в пачку
+    BATCH_SPLITTER, // Разбор пачки
+    MERGER,         // Объединение потоков
+    SINK,           // Финальный выход маршрута
+    BROADCAST,
+    LOG,
+    API_CALL
+}
+</file>
+
+<file path="src/main/java/org/example/model/route/RouteConfig.java">
+package org.example.model.route;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.util.List;
+import java.util.UUID;
+
+@Entity
+@Table(name = "routes")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor @Builder
+public class RouteConfig {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "route_id", updatable = false, nullable = false)
+    private UUID id;
+
+    @Column(name = "active")
+    private boolean isActive;
+
+    @Column(unique = true, nullable = false)
+    private String name;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "route_id")
+    private List<NodeConfig> nodes;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "route_id")
+    private List<RouteLink> links;
+}
+</file>
+
+<file path="src/main/java/org/example/model/route/RouteLink.java">
+package org.example.model.route;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.Map;
+import java.util.UUID;
+
+@Entity
+@Table(name = "links")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class RouteLink {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "link_id", updatable = false, nullable = false)
+    private UUID Id;
+
+    private int fromNodeId;
+    private int toNodeId;
+
+    private String outputTopic;
+    private boolean async;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "link_field_mappings",
+            joinColumns = @JoinColumn(name = "link_id")
+    )
+    @MapKeyColumn(name = "source_field")
+    @Column(name = "target_field")
+    private Map<String, String> fieldMapping;
+}
+</file>
+
+<file path="src/main/java/org/example/repository/AggregationRepository.java">
+package org.example.repository;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import org.example.model.dto.AggregationResult;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import java.util.Map;
+import java.util.UUID;
+
+@Repository
+@RequiredArgsConstructor
+public class AggregationRepository {
+
+    private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final ObjectMapper objectMapper;
+
+    public AggregationResult upsertFragment(UUID correlationId, String payload, Map<String, Object> context, int expectedCount) {
+        String sql = """
+            INSERT INTO aggregation_storage (correlation_id, expected_count, received_count, payloads, contexts)
+            VALUES (:id, :expected, 1, :payload::jsonb, :context::jsonb) 
+            ON CONFLICT (correlation_id) 
+            DO UPDATE SET 
+                received_count = aggregation_storage.received_count + 1,
+                payloads = aggregation_storage.payloads || :payload::jsonb,
+                contexts = aggregation_storage.contexts || :context::jsonb,
+                updated_at = CURRENT_TIMESTAMP
+            RETURNING received_count, expected_count, payloads::text, contexts::text
+        """;
+
+        try {
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                    .addValue("id", correlationId)
+                    .addValue("expected", expectedCount)
+                    .addValue("payload", payload)
+                    .addValue("context", objectMapper.writeValueAsString(context));
+
+            return jdbcTemplate.queryForObject(sql, params, (rs, rowNum) -> new AggregationResult(
+                    rs.getInt("received_count"),
+                    rs.getInt("expected_count"),
+                    rs.getString("payloads"),
+                    rs.getString("contexts")
+            ));
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка сохранения фрагмента", e);
+        }
+    }
+
+    public void deleteByCorrelationId(UUID correlationId) {
+        jdbcTemplate.update("DELETE FROM aggregation_storage WHERE correlation_id = :id",
+                new MapSqlParameterSource("id", correlationId));
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/repository/MessageAuditRepository.java">
+package org.example.repository;
+
+import org.example.model.dto.MessageAudit;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@Repository
+public interface MessageAuditRepository extends JpaRepository<MessageAudit, UUID> {
+
+    // Поиск по трассировке обычно не привязан к фильтру времени (ищем конкретный путь)
+    List<MessageAudit> findAllByStatusAndCreatedAtBetweenOrderByCreatedAtDesc(
+            String status,
+            LocalDateTime from,
+            LocalDateTime to
+    );
+    // --- Методы с фильтрацией по времени ---
+
+    @Query("SELECT COUNT(m) FROM MessageAudit m WHERE m.createdAt BETWEEN :from AND :to")
+    long countInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    @Query("SELECT COUNT(m) FROM MessageAudit m WHERE m.status = :status AND m.createdAt BETWEEN :from AND :to")
+    long countByStatusInRange(@Param("status") String status, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    @Query("SELECT AVG(m.executionTimeMs) FROM MessageAudit m WHERE m.createdAt BETWEEN :from AND :to")
+    Double getAverageExecutionTimeInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    // Последние сбои за выбранный период (Top 10)
+    @Query("SELECT m FROM MessageAudit m WHERE m.status = 'ERROR' AND m.createdAt BETWEEN :from AND :to ORDER BY m.createdAt DESC")
+    List<MessageAudit> findRecentIncidentsInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    @Query("SELECT m.nodeType, COUNT(m) FROM MessageAudit m WHERE m.status = 'ERROR' " +
+            "AND m.createdAt BETWEEN :from AND :to GROUP BY m.nodeType")
+    List<Object[]> countErrorsByNodeTypeInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    // Почасовая статистика (универсально для Postgres/H2)
+    // Убрал жесткий интервал '24 hours', теперь он зависит от параметров
+    @Query(value = "SELECT date_trunc('hour', created_at) as hr, " +
+            "count(*) filter (where status = 'SUCCESS') as success, " +
+            "count(*) filter (where status = 'ERROR') as errors " +
+            "FROM message_audit " +
+            "WHERE created_at BETWEEN :from AND :to " +
+            "GROUP BY hr ORDER BY hr", nativeQuery = true)
+    List<Object[]> getHourlyStatsInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    // Статистика здоровья по маршрутам за период (теперь по ИМЕНИ)
+    @Query("SELECT m.routeName, " + // Заменили m.routeId на m.routeName
+            "COUNT(m) as total, " +
+            "SUM(CASE WHEN m.status = 'ERROR' THEN 1 ELSE 0 END) as errors " +
+            "FROM MessageAudit m " +
+            "WHERE m.createdAt BETWEEN :from AND :to " +
+            "GROUP BY m.routeName") // Группируем по имени
+    List<Object[]> getRouteHealthDataInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    // Среднее время выполнения по маршрутам за период (теперь по ИМЕНИ)
+    @Query("SELECT m.routeName, AVG(m.executionTimeMs) FROM MessageAudit m " + // Заменили m.routeId на m.routeName
+            "WHERE m.createdAt BETWEEN :from AND :to " +
+            "GROUP BY m.routeName") // Группируем по имени
+    List<Object[]> getAverageLatencyByRouteInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    @Query(value = """
+        SELECT trace_id as "traceId", route_name as "routeName", status, created_at as "createdAt"
+        FROM (
+            SELECT DISTINCT ON (trace_id) trace_id, route_name, status, created_at
+            FROM message_audit
+            ORDER BY trace_id, created_at DESC
+        ) sub
+        ORDER BY created_at DESC
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Map<String, Object>> findRecentUniqueTraces(@Param("limit") int limit);
+
+    List<MessageAudit> findAllByTraceIdOrderByCreatedAtAsc(UUID traceId);
+
+}
+</file>
+
+<file path="src/main/java/org/example/repository/MessageRepository.java">
+package org.example.repository;
+
+import org.example.model.core.Message;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface MessageRepository extends JpaRepository<Message, String> {
+
+}
+</file>
+
+<file path="src/main/java/org/example/repository/RouteRepository.java">
+package org.example.repository;
+
+import org.example.model.route.RouteConfig;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface RouteRepository extends JpaRepository<RouteConfig, UUID> {
+    Optional<RouteConfig> findByName(String name);
+}
+</file>
+
+<file path="src/main/java/org/example/repository/RouteUiMetadataRepository.java">
+package org.example.repository;
+
+import org.example.model.dto.RouteUiMetadata;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.UUID;
+
+public interface RouteUiMetadataRepository extends JpaRepository<RouteUiMetadata, UUID> {
+}
+</file>
+
+<file path="src/main/java/org/example/repository/UserRepository.java">
+package org.example.repository;
+
+import org.example.model.core.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username);
+}
+</file>
+
+<file path="src/main/java/org/example/service/AggregationService.java">
+package org.example.service;
+
+import lombok.RequiredArgsConstructor;
+import org.example.model.dto.AggregationResult;
+import org.example.repository.AggregationRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class AggregationService {
+
+    private final AggregationRepository repository;
+
+    @Transactional
+    public AggregationResult addFragment(UUID correlationId, String payload, Map<String, Object> context, int expectedCount) {
+        return repository.upsertFragment(correlationId, payload, context, expectedCount);
+    }
+
+    @Transactional
+    public void cleanUp(UUID correlationId) {
+        repository.deleteByCorrelationId(correlationId);
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/service/AuditService.java">
+package org.example.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.model.dto.AuditData;
+import org.example.model.dto.MessageAudit;
+import org.example.repository.MessageAuditRepository;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AuditService {
+
+    private final MessageAuditRepository auditRepository;
+
+    @Async
+    public void logStep(AuditData data) {
+        try {
+            MessageAudit audit = MessageAudit.builder()
+                    .id(UUID.randomUUID())
+                    .traceId(data.getTraceId())
+                    .messageId(data.getMessageId())
+                    .routeId(data.getRouteId())
+                    .routeName(data.getRouteName())
+                    .nodeId(data.getNodeId())
+                    .nodeType(data.getNodeType())
+                    .status(data.getStatus())
+                    .payloadBefore(data.getPayloadBefore())
+                    .payloadAfter(data.getPayloadAfter())
+                    .headersSnapshot(data.getHeaders())
+                    .contextSnapshot(data.getContext())
+                    .nodeConfig(data.getNodeConfig())
+                    .errorMessage(data.getErrorMessage())
+                    .executionTimeMs(data.getDuration())
+                    .build();
+
+            auditRepository.save(audit);
+        } catch (Exception e) {
+            log.error("[Audit Error] Не удалось сохранить шаг аудита для сообщения {}: {}",
+                    data.getMessageId(), e.getMessage());
+        }
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/service/CustomUserDetailsService.java">
+package org.example.service; // Укажи свой пакет (например, .service или .config)
+
+import org.example.model.core.User;
+import org.example.repository.UserRepository;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь с логином " + username + " не найден"));
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/service/MessageIngestionService.java">
+package org.example.service;
+
+import lombok.extern.slf4j.Slf4j;
+import org.example.config.KafkaProducerService;
+import org.example.model.core.Message;
+import org.example.model.enums.MessageStatus;
+import org.example.model.route.RouteConfig;
+import org.example.repository.MessageRepository;
+import org.example.repository.RouteRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.Map;
+import java.util.UUID;
+import java.util.HashMap;
+import java.time.Instant;
+
+@Slf4j
+@Service
+public class MessageIngestionService {
+
+    @Value("${app.kafka.topics.inbound:messages.new}")
+    private String inboundTopic;
+
+    private final MessageRepository messageRepository;
+    private final KafkaProducerService kafkaProducerService;
+    private final RouteRepository routeRepository;
+
+    public MessageIngestionService(MessageRepository messageRepository,
+                                   RouteRepository routeRepository,
+                                   KafkaProducerService kafkaProducerService) {
+        this.messageRepository = messageRepository;
+        this.routeRepository = routeRepository;
+        this.kafkaProducerService = kafkaProducerService;
+    }
+
+    @Transactional
+    public String processInboundMessage(Map<String, Object> request) {
+        String routeName = (String) request.get("routeName");
+        Object payloadObj = request.get("payload");
+
+        log.info("[Ingestion] Получен новый запрос на маршрут: {}", routeName);
+
+        if (payloadObj == null || routeName == null) {
+            log.warn("[Error] Некорректный запрос: отсутствует payload или routeName");
+            throw new IllegalArgumentException("Payload and routeName are required");
+        }
+
+        RouteConfig route = routeRepository.findByName(routeName)
+                .orElseThrow(() -> {
+                    log.error("[Error] Маршрут '{}' не зарегистрирован в системе", routeName);
+                    return new IllegalArgumentException("Route not found: " + routeName);
+                });
+
+        Message message = Message.builder()
+                .id(UUID.randomUUID())
+                .routeId(route.getId())
+                .payload(payloadObj.toString())
+                .status(MessageStatus.NEW)
+                .createdAt(Instant.now())
+                .headers(new HashMap<>())
+                .context(new HashMap<>())
+                .build();
+
+        Map<String, Object> headers = (Map<String, Object>) request.get("headers");
+        if (headers != null) {
+            message.getHeaders().putAll(headers);
+        }
+
+        // 4. Сохранение и отправка
+        messageRepository.save(message);
+        log.info("[Ingestion] Сообщение {} успешно сохранено в БД. Отправка в топик {}", message.getId(), inboundTopic);
+
+        try {
+            kafkaProducerService.route(message, inboundTopic);
+        } catch (Exception e) {
+            log.error("[Fatal] Сообщение {} сохранено в БД, но произошел сбой при отправке в Kafka: {}",
+                    message.getId(), e.getMessage());
+            throw e;
+        }
+
+        return message.getId().toString();
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/service/MessageService.java">
+package org.example.service;
+
+import org.example.model.core.Message;
+import org.example.repository.MessageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class MessageService {
+
+    private final MessageRepository messageRepository;
+
+    @Autowired
+    public MessageService(MessageRepository messageRepository) {
+        this.messageRepository = messageRepository;
+    }
+
+    @Transactional
+    public Message saveMessage(Message message) {
+        return messageRepository.save(message);
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/service/TimeRangeService.java">
+package org.example.service;
+
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
+@Service
+public class TimeRangeService {
+    public RangeDates getDates(String range, String start, String end) {
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime from = switch (range != null ? range : "day") {
+            case "hour" -> now.minusHours(1);
+            case "week" -> now.minusWeeks(1);
+            case "month" -> now.minusMonths(1);
+            case "custom" -> (start != null) ? LocalDateTime.parse(start) : now.minusDays(1);
+            case "all" -> LocalDateTime.of(2000, 1, 1, 0, 0);
+            default -> now.minusDays(1); // "day"
+        };
+
+        LocalDateTime to = (range.equals("custom") && end != null)
+                ? LocalDateTime.parse(end)
+                : now;
+
+        return new RangeDates(from, to);
+    }
+
+    public record RangeDates(LocalDateTime from, LocalDateTime to) {}
+}
+</file>
+
+<file path="src/main/java/org/example/service/transformer/MessageMapper.java">
+package org.example.service.transformer;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.stereotype.Service;
+
+import java.util.Map;
+
+@Service
+public class MessageMapper {
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    public String applyMapping(String currentPayload, Map<String, String> mapping) throws Exception {
+        if (mapping == null || mapping.isEmpty()) {
+            return currentPayload;
+        }
+
+        JsonNode root = mapper.readTree(currentPayload);
+        ObjectNode resultNode = mapper.createObjectNode();
+
+        root.fields().forEachRemaining(entry -> {
+            String fieldName = entry.getKey();
+            JsonNode fieldValue = entry.getValue();
+
+            if (mapping.containsKey(fieldName)) {
+                String targetKey = mapping.get(fieldName);
+
+                if (targetKey != null && !targetKey.equalsIgnoreCase("null")) {
+                    resultNode.set(targetKey, fieldValue);
+                }
+            } else {
+                resultNode.set(fieldName, fieldValue);
+            }
+        });
+
+        return mapper.writeValueAsString(resultNode);
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/service/transformer/MessageTransformer.java">
+package org.example.service.transformer;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
+
+public class MessageTransformer {
+
+    private static final ObjectMapper jsonMapper = new ObjectMapper();
+    private static final XmlMapper xmlMapper = new XmlMapper();
+
+    static {
+        xmlMapper.configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, false);
+    }
+
+    public static String jsonToXml(String jsonPayload, String rootElement, String namespace, String prefix) throws JsonProcessingException {
+        Object obj = jsonMapper.readValue(jsonPayload, Object.class);
+
+        if (rootElement == null || rootElement.isEmpty()) {
+            rootElement = "payload";
+        }
+
+        String xml = xmlMapper.writer().withRootName(rootElement).writeValueAsString(obj);
+
+        if (namespace == null || namespace.isEmpty()) {
+            return xml;
+        }
+
+        String nsAttr = (prefix == null || prefix.isEmpty())
+                ? String.format(" xmlns=\"%s\"", namespace)
+                : String.format(" xmlns:%s=\"%s\"", prefix, namespace);
+
+        String taggedRoot = (prefix == null || prefix.isEmpty()) ? rootElement : prefix + ":" + rootElement;
+
+        return xml.replace("<" + rootElement + ">", "<" + taggedRoot + nsAttr + ">")
+                .replace("</" + rootElement + ">", "</" + taggedRoot + ">");
+    }
+
+    public static String xmlToJson(String xmlPayload) throws JsonProcessingException {
+        Object obj = xmlMapper.readValue(xmlPayload, Object.class);
+        return jsonMapper.writeValueAsString(obj);
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/test/HttpTestApp.java">
+//package org.example.test;
+//
+//import org.example.model.core.Message;
+//import org.example.service.sender.ExternalServiceClient;
+//import org.example.service.sender.HttpServiceClient;
+//
+//import java.util.Map;
+//
+//public class HttpTestApp {
+//    public static void main(String[] args) {
+//        try {
+//            ExternalServiceClient client = new HttpServiceClient();
+//
+//            Message message = new Message("<note><to>John</to><body>Hello XML!</body></note>");
+//            message.setHeaders(Map.of(
+//                    "Content-Type", "application/xml",
+//                    "Accept", "application/xml",
+//                    "X-HTTP-Method", "POST"
+//            ));
+//
+//            Message response = client.send(message, "https://httpbin.org/post");
+//
+//            System.out.println("Response payload:");
+//            System.out.println(response.getPayload());
+//            System.out.println("Response headers:");
+//            System.out.println(response.getHeaders());
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+//}
+</file>
+
+<file path="src/main/java/org/example/test/MappingTest.java">
+package org.example.test;
+
+import java.util.Map;
+import org.example.service.transformer.MessageMapper;
+
+public class MappingTest {
+    public static void main(String[] args) {
+        try {
+            String originalJson = "{\"ID\":\"123\", \"body\":\"Hello\"}";
+
+            Map<String, String> fieldMapping = Map.of(
+                    "ID", "UUID",
+                    "body", "content"
+            );
+
+            //String transformed = MessageMapper.applyMapping(originalJson, fieldMapping);
+            System.out.println(originalJson);
+            //System.out.println(transformed);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/test/MessageTestApp.java">
+//package org.example.test;
+//
+//import org.example.model.core.Message;
+//import org.hibernate.Session;
+//import org.hibernate.SessionFactory;
+//import org.hibernate.cfg.Configuration;
+//
+//import java.util.HashMap;
+//import java.util.Map;
+//
+//public class MessageTestApp {
+//
+//    public static void main(String[] args) {
+//        // Инициализация Hibernate (убедитесь, что hibernate.cfg.xml настроен)
+//        try (SessionFactory sessionFactory = new Configuration()
+//                .configure() // загружает hibernate.cfg.xml
+//                .buildSessionFactory();
+//             Session session = sessionFactory.openSession()) {
+//
+//            // --- 1. Подготовка данных ---
+//            // Исправлено: Тип значения Object, так как в классе Message теперь Map<String, Object>
+//            Map<String, Object> headers = new HashMap<>();
+//            headers.put("source", "frontend");
+//            headers.put("client", "client1");
+//            headers.put("retryCount", 1); // Теперь можно класть и числа
+//
+//            // --- 2. Сохранение сообщения ---
+//            System.out.println("--- Saving Message ---");
+//            session.beginTransaction();
+//
+//            Message message = new Message("Hello World 2");
+//            message.setHeaders(headers);
+//
+//            // Исправлено: getTimestamp() -> getCreatedAt()
+//            System.out.println("ID: " + message.getId());
+//            System.out.println("Payload: " + message.getPayload());
+//            System.out.println("Headers: " + message.getHeaders());
+//            System.out.println("Created At: " + message.getCreatedAt());
+//            System.out.println("Status: " + message.getStatus());
+//
+//            session.save(message);
+//            session.getTransaction().commit();
+//
+//            // --- 3. Получение сообщения ---
+//            System.out.println("\n--- Retrieving Message ---");
+//            session.beginTransaction();
+//
+//            // Hibernate загрузит сообщение по ID
+//            Message retrievedMessage = session.get(Message.class, message.getId());
+//
+//            if (retrievedMessage != null) {
+//                System.out.println("ID: " + retrievedMessage.getId());
+//                System.out.println("Payload: " + retrievedMessage.getPayload());
+//                System.out.println("Headers: " + retrievedMessage.getHeaders());
+//                // Исправлено: getTimestamp() -> getCreatedAt()
+//                System.out.println("Created At: " + retrievedMessage.getCreatedAt());
+//                System.out.println("Status: " + retrievedMessage.getStatus());
+//            } else {
+//                System.out.println("Message not found!");
+//            }
+//
+//            session.getTransaction().commit();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+//}
+</file>
+
+<file path="src/main/java/org/example/test/SoapTestApp.java">
+//package org.example.test;
+//
+//import org.example.model.core.Message;
+//import org.example.service.sender.ExternalServiceClient;
+//import org.example.service.sender.ServiceClientFactory;
+//
+//public class SoapTestApp {
+//    public static void main(String[] args) {
+//        try {
+//            // Выбираем клиент через фабрику
+//            ExternalServiceClient client = ServiceClientFactory.getClient("rest");
+//
+//            // Создаем payload JSON
+//            String jsonPayload = "{\"title\":\"Integration Test\",\"body\":\"Hello from system\",\"userId\":1}";
+//
+//            // Создаем сообщение
+//            Message request = new Message(jsonPayload);
+//
+//            // Отправляем сообщение на REST endpoint
+//            Message response = client.send(request, "https://jsonplaceholder.typicode.com/posts");
+//
+//            // Выводим результат
+//            System.out.println("Response payload: " + response.getPayload());
+//            System.out.println("Response headers: " + response.getHeaders());
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        }
+//}
+</file>
+
+<file path="src/main/java/org/example/util/FlywayMigration.java">
+package org.example.util;
+
+import org.flywaydb.core.Flyway;
+
+public class FlywayMigration {
+    public static void main(String[] args){
+        Flyway flyway = Flyway.configure().dataSource("jdbc:postgresql://localhost:5432/postgres",
+                "postgres","postgres").baselineOnMigrate(true).load();
+        flyway.migrate();
+    }
+}
+</file>
+
+<file path="src/main/java/org/example/util/HibernateUtil.java">
+package org.example.util;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+
+public class HibernateUtil {
+    private static SessionFactory sessionFactory;
+
+    public static SessionFactory getSessionFactory() {
+        final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+                .configure()
+                .build();
+        try {
+            sessionFactory = new MetadataSources(registry)
+                    .buildMetadata()
+                    .buildSessionFactory();
+        } catch (Exception e) {
+            StandardServiceRegistryBuilder.destroy(registry);
+        }
+        return sessionFactory;
+    }
+}
+</file>
+
+</files>

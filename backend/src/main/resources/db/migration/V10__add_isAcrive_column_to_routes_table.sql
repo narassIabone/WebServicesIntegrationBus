@@ -1,0 +1,2 @@
+ALTER TABLE routes
+    ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT false;

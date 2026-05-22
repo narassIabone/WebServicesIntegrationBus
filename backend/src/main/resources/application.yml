@@ -1,0 +1,55 @@
+app:
+  cors:
+    allowed-origins: "http://localhost:5173"
+
+spring:
+  application:
+    name: IntegrationBusForWebServices
+
+  # Настройки подключения к PostgreSQL
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/integration_bus}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  # Настройки JPA / Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # Настройки Kafka
+  kafka:
+    bootstrap-servers: ${esb.runtime.bootstrap-servers:localhost:9092}
+    consumer:
+      group-id: ${esb.runtime.group-id:esb-runtime-group}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        metadata.max.age.ms: 5000
+    producer:
+      retries: 3
+      properties:
+        retry.backoff.ms: 500
+        delivery.timeout.ms: 30000
+
+# Твои кастомные настройки для шины
+esb:
+  runtime:
+    concurrency: 5
+
+# Логирование
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    org.example: DEBUG # Чтобы видеть логи своего приложения
