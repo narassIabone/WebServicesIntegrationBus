@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { CheckCircle2, AlertCircle, Clock, ChevronRight, X, Fingerprint, Code2, Database, ArrowDown } from 'lucide-react';
-import JsonBlock from '../ui/JsonBlock.jsx';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
+import TraceDetailModal from '../ui/TraceDetailModal'; // Импортируем новый общий компонент
 
 const AuditTable = ({ steps }) => {
     const [selectedStep, setSelectedStep] = useState(null);
@@ -11,7 +11,7 @@ const AuditTable = ({ steps }) => {
                 <thead>
                 <tr className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
                     <th className="pb-3 text-center w-12">Шаг</th>
-                    <th className="pb-3 px-4">Узел</th>
+                    <th className="pb-3 px-4 w-40">Узел</th>
                     <th className="pb-3 px-4">Действие</th>
                     <th className="pb-3 px-4">Данные</th>
                     <th className="pb-3 px-4 text-right">Время</th>
@@ -29,10 +29,25 @@ const AuditTable = ({ steps }) => {
                                 {index + 1}
                             </div>
                         </td>
-                        <td className="py-4 px-4 whitespace-nowrap">
-                            <div className="flex flex-col">
-                                <span className="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[8px] font-black uppercase w-fit mb-0.5">{step.nodeType}</span>
-                                <span className="text-[10px] font-bold text-slate-700">{step.nodeId}</span>
+                        <td className="py-4 px-4 overflow-hidden">
+                            <div className="flex flex-col min-w-0">
+                                <span className="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[8px] font-black uppercase w-fit mb-0.5">
+                                    {step.nodeType}
+                                </span>
+                                <div className="text-[10px] text-slate-700 flex items-center gap-1.5 min-w-0">
+                                    <span className="font-mono font-medium text-slate-400 shrink-0">
+                                        #{step.nodeId}
+                                    </span>
+                                    {step.nodeName ? (
+                                        <span className="font-bold text-red-900 truncate" title={step.nodeName}>
+                                            {step.nodeName}
+                                        </span>
+                                    ) : (
+                                        <span className="font-bold text-slate-300 italic">
+                                            Без имени
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </td>
                         <td className="py-4 px-4">
@@ -57,25 +72,8 @@ const AuditTable = ({ steps }) => {
                 </tbody>
             </table>
 
-            {/* Модалка для сравнения (из твоего предыдущего дизайна) */}
-            {selectedStep && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
-                    <div className="relative bg-white rounded-[3rem] shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-                        <div className="px-10 py-6 border-b border-gray-100 flex justify-between items-center bg-white">
-                            <h3 className="text-xl font-black text-gray-800 uppercase tracking-tight">Step Detail: {selectedStep.nodeId}</h3>
-                            <button onClick={() => setSelectedStep(null)} className="p-2 hover:bg-gray-100 rounded-full transition-all"><X size={24} className="text-gray-400" /></button>
-                        </div>
-                        <div className="p-10 overflow-y-auto bg-slate-50/30 flex-1 space-y-6">
-                            <section className="flex flex-col bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 relative">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[350px]">
-                                    <JsonBlock title="Input" data={selectedStep.payloadBefore} />
-                                    <JsonBlock title="Output" data={selectedStep.payloadAfter} />
-                                </div>
-                            </section>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Вызов общего модального окна */}
+            <TraceDetailModal data={selectedStep} onClose={() => setSelectedStep(null)} />
         </div>
     );
 };

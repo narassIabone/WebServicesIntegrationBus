@@ -4,131 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2e4427f7-67b3-4fc1-a3f8-f9917cd43909" name="Changes" comment="add logging system and message audit">
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/backend.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/controller/AuditController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/dto/RouteStatDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/dto/RouteUiMetadata.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/repository/MessageAuditRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/repository/RouteUiMetadataRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/service/TimeRangeService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V10__add_isAcrive_column_to_routes_table.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V11__add_routeName_and_nodeConfig_to_message_audit_table.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V9__add_route_ui_metadata_table.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/static/assets/index-DLVtzrQE.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/static/assets/index-bnYH6bEQ.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/templates/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/eslint.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/frontend.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/postcss.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/favicon.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/icons.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/App.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/editor/AuditTable.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/editor/ConfigSidebar.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/editor/NodeLibrary.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/editor/SystemToolbar.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/editor/Toolbar.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/nodes/ServiceNode.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/ui/CustomSelect.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/ui/IncidentsTable.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/ui/JsonBlock.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/ui/RouteListModal.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/constants/nodeMetadata.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/hooks/useFlowLogic.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/index.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/main.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/pages/Dashboard.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/pages/FlowEditor.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/pages/MessageAudit.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/pages/RouteList.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/pages/Settings.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/tailwind.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/vite.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.idea/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/config/KafkaAdminService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/config/KafkaAdminService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/config/KafkaConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/config/KafkaConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/config/KafkaProducerService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/config/KafkaProducerService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/AuditController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/MessageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/controller/MessageController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/RouteAdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/controller/RouteAdminController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/WebController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/controller/WebController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/exception/FatalException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/exception/FatalException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/exception/RetryableException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/exception/RetryableException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/executor/RetryHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/executor/RetryHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/executor/RouteAdminService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/executor/RouteAdminService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/executor/RouteCacheService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/executor/RouteCacheService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/executor/RouteExecutor.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/executor/RouteExecutor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/processor/NodeProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/processor/NodeProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/processor/NodeProcessorFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/processor/NodeProcessorFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/processor/ProcessorResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/processor/ProcessorResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/processor/impl/AggregatorProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/processor/impl/AggregatorProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/processor/impl/ApiCallProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/processor/impl/ApiCallProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/processor/impl/FilterProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/processor/impl/FilterProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/processor/impl/LogProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/processor/impl/LogProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/engine/processor/impl/SplitterProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/engine/processor/impl/SplitterProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/core/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/entity/Message.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/core/MessageStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/enums/MessageStatus.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/core/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/entity/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/dto/AuditData.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/dto/AuditData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/entity/AggregationResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/dto/AggregationResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/entity/MessageAudit.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/dto/MessageAudit.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/route/NodeConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/entity/NodeConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/route/NodeType.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/enums/NodeType.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/route/RouteConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/entity/RouteConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/route/RouteLink.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/model/entity/RouteLink.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/AggregationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/repository/AggregationRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/MessageAuditRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/MessageRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/repository/MessageRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/RouteRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/repository/RouteRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/repository/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/AggregationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/service/AggregationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/AuditService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/service/AuditService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/CustomUserDetailsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/service/CustomUserDetailsService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/MessageIngestionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/service/MessageIngestionService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/MessageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/service/MessageService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/transformer/MessageMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/service/transformer/MessageMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/transformer/MessageTransformer.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/service/transformer/MessageTransformer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/HttpTestApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/test/HttpTestApp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/MappingTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/test/MappingTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/MessageTestApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/test/MessageTestApp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/SoapTestApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/test/SoapTestApp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/util/FlywayMigration.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/util/FlywayMigration.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/util/HibernateUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/util/HibernateUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V1__init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V1__init.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V2_add_headers_column_to_messages.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V2_add_headers_column_to_messages.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V3_add_users_table.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V3_add_users_table.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V4__add_route_config_tables_and_fix_messages.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V4__add_route_config_tables_and_fix_messages.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V5__add_aggregation_storage_table.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V5__add_aggregation_storage_table.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V6__change_aggregation_storage_table.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V6__change_aggregation_storage_table.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V7__add_context_column_aggregation_storage_table.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V7__add_context_column_aggregation_storage_table.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V8__add_message_audit_table.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V8__add_message_audit_table.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/hibernate.cfg.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/hibernate.cfg.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/routeExamples/mainRoute.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/routeExamples/mainRoute.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/routeExamples/route1.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/routeExamples/route1.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/routeExamples/testRoute.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/routeExamples/testRoute.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/static/css/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/templates/login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/ApiCallProcessorTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/ApiCallProcessorTest.java" afterDir="false" />
-    </list>
+    <list default="true" id="2e4427f7-67b3-4fc1-a3f8-f9917cd43909" name="Changes" comment="separate project to backend and frontend, update backend controllers and audit data saving, wrote full frontend" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -376,7 +252,7 @@
       <workItem from="1776702413679" duration="3678000" />
       <workItem from="1776856109761" duration="1753000" />
       <workItem from="1779470969051" duration="52000" />
-      <workItem from="1779471030710" duration="1357000" />
+      <workItem from="1779471030710" duration="1619000" />
     </task>
     <task id="LOCAL-00001" summary="v22102025">
       <option name="closed" value="true" />
@@ -490,7 +366,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776857596405</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="separate project to backend and frontend, update backend controllers and audit data saving, wrote full frontend">
+      <option name="closed" value="true" />
+      <created>1779472649736</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1779472649736</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -520,7 +404,8 @@
     <MESSAGE value="Добавлена страница логина для администратора и всё для этого необходимое (User model, Spring Security, Web Controller)" />
     <MESSAGE value="big update: add route model (route config, node config, links), route executor, kafka dynamic topics, routing nodes. Add and change DB tables" />
     <MESSAGE value="add logging system and message audit" />
-    <option name="LAST_COMMIT_MESSAGE" value="add logging system and message audit" />
+    <MESSAGE value="separate project to backend and frontend, update backend controllers and audit data saving, wrote full frontend" />
+    <option name="LAST_COMMIT_MESSAGE" value="separate project to backend and frontend, update backend controllers and audit data saving, wrote full frontend" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

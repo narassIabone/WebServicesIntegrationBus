@@ -6,6 +6,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.example.model.entity.Message;
+import org.example.service.SystemSettingsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +23,11 @@ import java.util.Map;
 @EnableKafka
 public class KafkaConfig {
 
-    @Value("${esb.runtime.concurrency:5}")
-    private int concurrency;
+    private final SystemSettingsService settingsService;
+
+    public KafkaConfig(SystemSettingsService settingsService) {
+        this.settingsService = settingsService;
+    }
 
     @Value("${spring.kafka.consumer.properties.metadata.max.age.ms:5000}")
     private String metadataMaxAge;
@@ -71,7 +75,7 @@ public class KafkaConfig {
         ConcurrentKafkaListenerContainerFactory<String, Message> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-        // Количество потоков для обработки. Позволяет обрабатывать сообщения из разных топиков параллельно.
+        int concurrency = settingsService.getInt("esb_runtime_concurrency", 5);
         factory.setConcurrency(concurrency);
         return factory;
     }

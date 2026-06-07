@@ -46,8 +46,8 @@ public class AggregatorProcessor implements NodeProcessor {
         UUID correlationId = UUID.fromString(correlationObj.toString());
         int expectedCount = Integer.parseInt(config.getConfig().getOrDefault("expected_count", "2"));
 
-        log.info("[Node {} (AGGREGATOR)] Обработка фрагмента для группы {}. Ожидаем: {}",
-                config.getId(), correlationId, expectedCount);
+        log.info("[Node 'AGGREGATOR' ({})] Обработка фрагмента для группы {}. Ожидаем: {}",
+                config.getName(), correlationId, expectedCount);
 
         AggregationResult result;
         try {
@@ -62,12 +62,12 @@ public class AggregatorProcessor implements NodeProcessor {
             throw new RetryableException("Aggregator: ошибка при сохранении фрагмента в БД: " + e.getMessage());
         }
 
-        log.info("[Node {} (AGGREGATOR)] Группа {}: получено {} из {}",
-                config.getId(), correlationId, result.getReceivedCount(), result.getExpectedCount());
+        log.info("[Node 'AGGREGATOR' ({})] Группа {}: получено {} из {}",
+                config.getName(), correlationId, result.getReceivedCount(), result.getExpectedCount());
 
         if (result.getReceivedCount() >= result.getExpectedCount()) {
-            log.info("[Node {} (AGGREGATOR)] Группа {} ПОЛНОСТЬЮ СОБРАНА. Начинаем слияние данных.",
-                    config.getId(), correlationId);
+            log.info("[Node 'AGGREGATOR' ({})] Группа {} ПОЛНОСТЬЮ СОБРАНА. Начинаем слияние данных.",
+                    config.getName(), correlationId);
 
             message.setPayload(result.getRawPayloads());
 
@@ -84,8 +84,8 @@ public class AggregatorProcessor implements NodeProcessor {
 
             try {
                 aggregationService.cleanUp(correlationId);
-                log.debug("[Node {} (AGGREGATOR)] Данные группы {} удалены из временного хранилища",
-                        config.getId(), correlationId);
+                log.debug("[Node 'AGGREGATOR' ({})] Данные группы {} удалены из временного хранилища",
+                        config.getName(), correlationId);
             } catch (Exception e) {
                 log.warn("[Error] Ошибка при очистке группы {}: {}", correlationId, e.getMessage());
             }
@@ -95,8 +95,8 @@ public class AggregatorProcessor implements NodeProcessor {
                     .build();
         }
 
-        log.info("[Node {} (AGGREGATOR)] Сообщение {} поглощено. Ожидаем остальные фрагменты группы {}.",
-                config.getId(), message.getId(), correlationId);
+        log.info("[Node 'AGGREGATOR' ({})] Сообщение {} поглощено. Ожидаем остальные фрагменты группы {}.",
+                config.getName(), message.getId(), correlationId);
 
         return ProcessorResult.builder().build();
     }

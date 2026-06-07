@@ -6,7 +6,7 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.example.model.entity.NodeConfig;
 import org.example.model.entity.RouteConfig;
 import org.example.model.entity.RouteLink;
-import org.springframework.beans.factory.annotation.Value;
+import org.example.service.SystemSettingsService;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.stereotype.Service;
 
@@ -20,16 +20,17 @@ import java.util.stream.Collectors;
 public class RouteAdminService {
 
     private final KafkaAdmin kafkaAdmin;
+    private final SystemSettingsService settingsService;
 
-    @Value("${app.kafka.topics.inbound:messages.new}")
-    private String inboundTopic;
-
-    public RouteAdminService(KafkaAdmin kafkaAdmin) {
+    public RouteAdminService(KafkaAdmin kafkaAdmin, SystemSettingsService settingsService) {
         this.kafkaAdmin = kafkaAdmin;
+        this.settingsService = settingsService;
     }
 
     public void prepareRouteConfig(RouteConfig route) {
         log.info("[Admin] Подготовка инфраструктуры для маршрута: {} (ID: {})", route.getName(), route.getId());
+
+        String inboundTopic = settingsService.getString("topic_inbound", "messages.new");
 
         String routeName = route.getName() != null ? route.getName() : "default";
         Set<String> topicsToCreate = new HashSet<>();

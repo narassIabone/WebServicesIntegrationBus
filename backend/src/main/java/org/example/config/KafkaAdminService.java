@@ -32,7 +32,7 @@ public class KafkaAdminService {
             if (!topics.contains(topicName)) {
                 log.info("[Admin] Топик {} не найден. Создаю...", topicName);
 
-                NewTopic newTopic = new NewTopic(topicName, 1, (short) 1);
+                NewTopic newTopic = new NewTopic(topicName, 12, (short) 1);
                 adminClient.createTopics(Collections.singleton(newTopic)).all().get();
 
                 log.info("[Admin] Топик {} успешно создан", topicName);

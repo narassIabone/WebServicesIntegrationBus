@@ -109,8 +109,8 @@ public class ApiCallProcessor implements NodeProcessor {
         String filteredPayload = filterPayload(message.getPayload(), targetFields);
 
         // Логируем исходящий запрос
-        log.info("[Node {} (API_CALL)] Вызов внешнего сервиса [{}]: {} {}",
-                config.getId(), protocol, method, finalUrl);
+        log.info("[Node 'API_CALL' ({})] Вызов внешнего сервиса [{}]: {} {}",
+                config.getName(), protocol, method, finalUrl);
 
         try {
             var responseEntity = webClient.method(HttpMethod.valueOf(method))
@@ -134,10 +134,10 @@ public class ApiCallProcessor implements NodeProcessor {
                 message.getContext().put(config.getId() + ".http_status", statusCode);
 
                 // КЛЮЧЕВОЙ ЛОГ: Ответ от API
-                log.info("[Node {} (API_CALL)] Получен ответ (Status: {}). Body: {}",
-                        config.getId(), statusCode, responseBody);
+                log.info("[Node 'API_CALL' ({})] Получен ответ (Status: {}). Body: {}",
+                        config.getName(), statusCode, responseBody);
 
-                handleResponseData(message, responseBody, params, config.getId());
+                handleResponseData(message, responseBody, params, config.getName());
             }
 
             return ProcessorResult.builder()
@@ -152,7 +152,7 @@ public class ApiCallProcessor implements NodeProcessor {
         }
     }
 
-    private void handleResponseData(Message message, String responseBody, Map<String, String> params, int nodeId) {
+    private void handleResponseData(Message message, String responseBody, Map<String, String> params, String nodeName) {
         String strategy = params.getOrDefault("response_strategy", "OVERRIDE").toUpperCase();
         String protocol = params.getOrDefault("protocol", "REST").toUpperCase();
         String processedResponse = responseBody;
@@ -160,13 +160,13 @@ public class ApiCallProcessor implements NodeProcessor {
         if ("SOAP".equals(protocol) || isXml(responseBody)) {
             try {
                 processedResponse = convertXmlToJson(responseBody, params);
-                log.debug("[Node {} (API_CALL)] XML успешно сконвертирован в JSON", nodeId);
+                log.debug("[Node 'API_CALL' ({})] XML успешно сконвертирован в JSON", nodeName);
             } catch (Exception e) {
-                log.error("[Error] Ошибка конвертации XML для ноды {}: {}", nodeId, e.getMessage());
+                log.error("[Error] Ошибка конвертации XML для ноды {}: {}", nodeName, e.getMessage());
             }
         }
 
-        log.debug("[Node {} (API_CALL)] Применение стратегии сохранения: {}", nodeId, strategy);
+        log.debug("[Node 'API_CALL' ({})] Применение стратегии сохранения: {}", nodeName, strategy);
 
         switch (strategy) {
             case "MERGE_FULL" -> message.setPayload(mergeFull(message.getPayload(), processedResponse));

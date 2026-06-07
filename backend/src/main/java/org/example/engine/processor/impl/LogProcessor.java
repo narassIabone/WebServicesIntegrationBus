@@ -25,19 +25,19 @@ public class LogProcessor implements NodeProcessor {
         Map<String, String> nodeParams = config.getConfig();
         String customPrefix = (nodeParams != null) ? nodeParams.getOrDefault("prefix", "DEBUG") : "DEBUG";
 
-        log.info("[Node {} (LOG)] === {} ===", config.getId(), customPrefix);
-        log.info("[Node {} (LOG)] ID: {}", config.getId(), message.getId());
-        log.info("[Node {} (LOG)] Payload: {}", config.getId(), message.getPayload());
+        log.info("[Node 'LOG' ({})] === {} ===", config.getId(), customPrefix);
+        log.info("[Node 'LOG' ({})] ID: {}", config.getId(), message.getId());
+        log.info("[Node 'LOG' ({})] Payload: {}", config.getId(), message.getPayload());
 
         if (!message.getHeaders().isEmpty()) {
-            log.info("[Node {} (LOG)] Headers: {}", config.getId(), message.getHeaders());
+            log.info("[Node 'LOG' ({})] Headers: {}", config.getId(), message.getHeaders());
         }
 
         if (!message.getContext().isEmpty()) {
-            log.info("[Node {} (LOG)] Context: {}", config.getId(), message.getContext());
+            log.info("[Node 'LOG' ({})] Context: {}", config.getId(), message.getContext());
         }
 
-        log.info("[Node {} (LOG)] =======================", config.getId());
+        log.info("[Node 'LOG' ({})] =======================", config.getId());
 
         return new ProcessorResult(List.of(
                 new ProcessorResult.OutboundEnvelope(message, null)

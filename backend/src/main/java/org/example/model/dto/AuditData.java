@@ -13,6 +13,7 @@ public class AuditData {
     private final UUID routeId;
     private final Integer nodeId;
     private final String nodeType;
+    private final String nodeName;
     private final String routeName;
     private final String status;
     private final String payloadBefore;

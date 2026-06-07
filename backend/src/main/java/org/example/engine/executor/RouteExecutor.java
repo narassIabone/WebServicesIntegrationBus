@@ -13,12 +13,12 @@ import org.example.model.entity.RouteLink;
 import org.example.config.KafkaProducerService;
 import org.example.service.AuditService;
 import org.example.service.transformer.MessageMapper;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
+import org.example.service.SystemSettingsService;
 
 
 import java.util.HashMap;
@@ -30,38 +30,29 @@ import java.util.stream.Collectors;
 @Service
 public class RouteExecutor {
 
-    @Value("${app.kafka.topics.error:messages.error}")
-    private String errorTopic;
-
-    @Value("${app.kafka.topics.final:messages.delivered}")
-    private String finalTopic;
-
-    @Value("${app.kafka.topics.inbound:messages.new}")
-    private String inboundTopic;
-
-    @Value("${app.executor.max-retries:3}")
-    private int maxRetries;
-
     private final RouteCacheService routeCache;
     private final KafkaProducerService kafkaProducer;
     private final NodeProcessorFactory processorFactory;
     private final MessageMapper messageMapper;
     private final AuditService auditService;
+    private final SystemSettingsService settingsService;
 
     public RouteExecutor(RouteCacheService routeCache,
                          KafkaProducerService kafkaProducer,
                          NodeProcessorFactory processorFactory,
                          MessageMapper messageMapper,
-                         AuditService auditService) {
+                         AuditService auditService,
+                         SystemSettingsService settingsService) {
         this.routeCache = routeCache;
         this.kafkaProducer = kafkaProducer;
         this.processorFactory = processorFactory;
         this.messageMapper = messageMapper;
         this.auditService = auditService;
+        this.settingsService = settingsService;
     }
 
     @KafkaListener(
-            topicPattern = "${app.kafka.topics.inbound:messages.new}|^(route\\.(?!.*-retry).*)$",
+            topicPattern = "#{@systemSettingsService.getString('topic_inbound', 'messages.new')}|^(route\\.(?!.*-retry).*)$",
             groupId = "esb-runtime-group"
     )
     public void execute(@Payload Message message,
@@ -88,8 +79,8 @@ public class RouteExecutor {
             return;
         }
 
-        log.info("[Node {} ({})] Начало обработки сообщения {}. Полезная нагрузка: {}",
-                currentNode.getId(), currentNode.getType(), message.getId(), message.getPayload());
+        log.info("[Node '{}' ({})] Начало обработки сообщения {}. Полезная нагрузка: {}",
+                currentNode.getType(), currentNode.getName(), message.getId(), message.getPayload());
 
         String payloadBefore = message.getPayload();
 
@@ -110,8 +101,8 @@ public class RouteExecutor {
 
                 if (explicitTarget != null) {
                     String targetTopic = findTopicToSpecificNode(route, currentNode.getId(), explicitTarget);
-                    log.info("[Node {} ({})] Прямая маршрутизация сообщения {} -> узел {} (топик: {})",
-                            currentNode.getId(), currentNode.getType(), msg.getId(), explicitTarget, targetTopic);
+                    log.info("[Node '{}' ({})] Прямая маршрутизация сообщения {} -> узел {} (топик: {})",
+                            currentNode.getType(), currentNode.getName(), msg.getId(), explicitTarget, targetTopic);
                     kafkaProducer.route(msg, targetTopic);
                 } else {
                     List<RouteLink> nextLinks = findAllNextLinks(route, currentNode.getId());
@@ -119,8 +110,8 @@ public class RouteExecutor {
                     for (int i = 0; i < nextLinks.size(); i++) {
                         RouteLink link = nextLinks.get(i);
                         Message messageToSend = (i < nextLinks.size() - 1) ? msg.copy() : msg;
-                        log.info("[Node {} ({})] Пересылка сообщения {} в следующий топик: {}",
-                                currentNode.getId(), currentNode.getType(), messageToSend.getId(), link.getOutputTopic());
+                        log.info("[Node '{}' ({})] Пересылка сообщения {} в следующий топик: {}",
+                                currentNode.getType(), currentNode.getName(), messageToSend.getId(), link.getOutputTopic());
                         kafkaProducer.route(messageToSend, link.getOutputTopic());}
 
                     if (nextLinks.isEmpty()) {
@@ -142,6 +133,8 @@ public class RouteExecutor {
         sendAudit(traceId, message, currentNode, routeId, routeName, payloadBefore, duration, "ERROR", cause.getMessage());
         if (cause instanceof org.example.engine.exception.RetryableException) {
             int currentRetry = Integer.parseInt(String.valueOf(message.getContext().getOrDefault("retry_count", "0")));
+
+            int maxRetries = settingsService.getInt("app_executor_max_retries", 3);
 
             if (currentRetry < maxRetries) {
                 int nextRetry = currentRetry + 1;
@@ -169,11 +162,11 @@ public class RouteExecutor {
             String mappedPayload = prepareMessage(message, incomingLink);
             message.setPayload(mappedPayload);
 
-            log.info("[Node {} ({})] Выполнен маппинг сообщения {}: данные изменены с [{}] на [{}]",
-                    currentNode.getId(), currentNode.getType(), message.getId(), oldPayload, mappedPayload);
+            log.info("[Node '{}' ({})] Выполнен маппинг сообщения {}: данные изменены с [{}] на [{}]",
+                    currentNode.getType(), currentNode.getName(), message.getId(), oldPayload, mappedPayload);
         } else {
-            log.debug("[Node {} ({})] Маппинг пропущен: правила трансформации не заданы",
-                    currentNode.getId(), currentNode.getType());
+            log.debug("[Node '{}' ({})] Маппинг пропущен: правила трансформации не заданы",
+                    currentNode.getType(), currentNode.getName());
         }
     }
 
@@ -185,6 +178,7 @@ public class RouteExecutor {
                 .routeId(routeId)
                 .routeName(routeName)
                 .nodeId(node.getId())
+                .nodeName(node.getName())
                 .nodeType(node.getType().name())
                 .status(status)
                 .payloadBefore(payloadBefore)
@@ -198,6 +192,8 @@ public class RouteExecutor {
     }
 
     private NodeConfig findNodeByInputTopic(RouteConfig route, String topic) {
+        String inboundTopic = settingsService.getString("topic_inbound", "messages.new");
+
         return route.getLinks().stream()
                 .filter(link -> topic.equals(link.getOutputTopic()))
                 .findFirst()
@@ -241,6 +237,8 @@ public class RouteExecutor {
     }
 
     private void finalizeRoute(Message msg) {
+        String finalTopic = settingsService.getString("topic_final", "messages.delivered");
+
         msg.setStatus(MessageStatus.DELIVERED);
         log.info("[Completed] Сообщение {} успешно доставлено в финальный топик {}",
                 msg.getId(), finalTopic);
@@ -248,6 +246,8 @@ public class RouteExecutor {
     }
 
     private void sendToErrorQueue(Message message, String reason, NodeConfig currentNode) {
+        String errorTopic = settingsService.getString("topic_error", "messages.error");
+
         log.error("[Fatal] Сообщение {} перемещено в очередь ошибок {}. Причина: {}",
                 message.getId(), errorTopic, reason);
 

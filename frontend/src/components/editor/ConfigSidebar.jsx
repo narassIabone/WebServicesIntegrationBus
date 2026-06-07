@@ -175,6 +175,18 @@ const ConfigSidebar = ({
                                 </div>
                             </div>
                         </div>
+                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                Название узла
+                            </label>
+                            <input
+                                type="text"
+                                value={selectedNode.data.config?.name || ''}
+                                onChange={(e) => updateNodeConfig('name', e.target.value)}
+                                className={inputClass}
+                                placeholder="Например: Проверка паспорта, Split-1..."
+                            />
+                        </div>
                         <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 mb-4">
                             <div className="flex flex-col">
                                 <span className="text-[11px] font-bold text-slate-700 uppercase">Стартовый узел</span>

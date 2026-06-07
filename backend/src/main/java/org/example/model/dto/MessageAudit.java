@@ -38,6 +38,10 @@ public class MessageAudit {
     @Column(name = "node_id", nullable = false)
     private Integer nodeId;
 
+    @Column(name = "node_name")
+    private String nodeName;
+    
+
     @Column(name = "node_type")
     private String nodeType;
 

@@ -9,5 +9,9 @@ export default defineConfig({
         target: 'http://localhost:8080',
       }
     }
+  },
+  build: {
+    outDir: 'D:/Programms/IntelliJ IDEA 2025.1.3/projects/WebServicesIntegrationBus/backend/src/main/resources/static',
+    emptyOutDir: false,
   }
 })

@@ -63,7 +63,6 @@ const Dashboard = () => {
             ]);
 
             if (!detailsRes.ok || !incidentsRes.ok || !routesRes.ok) throw new Error('API Error');
-
             const details = await detailsRes.json();
             const incidents = await incidentsRes.json();
             const routes = await routesRes.json();
@@ -73,6 +72,44 @@ const Dashboard = () => {
                 success: item.success,
                 errors: item.errors
             }));
+
+            if (range === 'custom') {
+                const formatDateForGraph = (dateString) => {
+                    const d = new Date(dateString);
+                    if (isNaN(d.getTime())) return null;
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const hours = String(d.getHours()).padStart(2, '0');
+                    const minutes = String(d.getMinutes()).padStart(2, '0');
+                    return `${day}.${month} ${hours}:${minutes}`;
+                };
+
+                const formattedStart = customDates.start ? formatDateForGraph(customDates.start) : null;
+                const formattedEnd = customDates.end ? formatDateForGraph(customDates.end) : null;
+
+                if (formattedHourly.length === 0) {
+                    // Если логов вообще нет за период, просто рисуем пустую прямую от старта до конца
+                    if (formattedStart) formattedHourly.push({ time: formattedStart, success: 0, errors: 0 });
+                    if (formattedEnd && formattedEnd !== formattedStart) formattedHourly.push({ time: formattedEnd, success: 0, errors: 0 });
+                } else {
+                    // Добавляем точку старта в начало, если её там нет
+                    if (formattedStart && formattedHourly[0].time !== formattedStart) {
+                        formattedHourly.unshift({
+                            time: formattedStart,
+                            success: 0,
+                            errors: 0
+                        });
+                    }
+                    // Добавляем точку финиша в конец, если её там нет
+                    if (formattedEnd && formattedHourly[formattedHourly.length - 1].time !== formattedEnd) {
+                        formattedHourly.push({
+                            time: formattedEnd,
+                            success: 0,
+                            errors: 0
+                        });
+                    }
+                }
+            }
 
             const formattedNodeErrors = details.nodeErrors.map(item => ({
                 name: item[0],
@@ -87,7 +124,7 @@ const Dashboard = () => {
                 incidents: incidents,
                 routeAnalytics: routes
             });
-        } catch (e) {
+        } catch {
             toast.error("Ошибка синхронизации данных");
         } finally {
             setLoading(false);
@@ -108,6 +145,9 @@ const Dashboard = () => {
             </div>
         );
     }
+
+    const totalPoints = data.hourlyStats.length;
+    const axisInterval = totalPoints > 10 ? Math.floor(totalPoints / 10) - 1 : 0;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-12">
@@ -202,13 +242,17 @@ const Dashboard = () => {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+
+                                {/* ИЗМЕНИЛИ ТУТ: Добавлен фиксированный интервал отрисовки шагов оси */}
                                 <XAxis
                                     dataKey="time"
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{fill: '#94a3b8', fontSize: 11}}
-                                    minTickGap={30}
+                                    interval={axisInterval} // Задает строгую плотность шагов
+                                    minTickGap={10} // Снизили зазор, чтобы Recharts не выкидывал принудительные тики
                                 />
+
                                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11}} />
                                 <Tooltip
                                     content={({ active, payload, label }) => {
@@ -243,44 +287,52 @@ const Dashboard = () => {
                         <span className="text-xs font-normal text-gray-400">Топ за период</span>
                     </h3>
                     <div className="h-80 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                                data={data.nodeErrors}
-                                layout="vertical"
-                                margin={{ left: 20, right: 40 }}
-                            >
-                                <XAxis type="number" hide />
-                                <YAxis
-                                    dataKey="name"
-                                    type="category"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{fontSize: 12, fontWeight: 700, fill: '#64748b'}}
-                                    width={100}
-                                />
-                                <Tooltip
-                                    cursor={{fill: '#f8fafc'}}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                />
-                                <Bar
-                                    dataKey="errors"
-                                    fill="#f43f5e"
-                                    radius={[0, 6, 6, 0]}
-                                    barSize={24}
-                                    label={{
-                                        position: 'right',
-                                        fill: '#f43f5e',
-                                        fontSize: 12,
-                                        fontWeight: 'bold',
-                                        formatter: (value) => value > 0 ? `${value} шт.` : ''
-                                    }}
+                        {data.nodeErrors && data.nodeErrors.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                    data={data.nodeErrors}
+                                    layout="vertical"
+                                    margin={{ left: 20, right: 40 }}
                                 >
-                                    {data.nodeErrors.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fillOpacity={1 - (index * 0.15)} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                                    <XAxis type="number" hide />
+                                    <YAxis
+                                        dataKey="name"
+                                        type="category"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{fontSize: 12, fontWeight: 700, fill: '#64748b'}}
+                                        width={100}
+                                    />
+                                    <Tooltip
+                                        cursor={{fill: '#f8fafc'}}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                    />
+                                    <Bar
+                                        dataKey="errors"
+                                        fill="#f43f5e"
+                                        radius={[0, 6, 6, 0]}
+                                        barSize={24}
+                                        label={{
+                                            position: 'right',
+                                            fill: '#f43f5e',
+                                            fontSize: 12,
+                                            fontWeight: 'bold',
+                                            formatter: (value) => value > 0 ? `${value} шт.` : ''
+                                        }}
+                                    >
+                                        {data.nodeErrors.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fillOpacity={1 - (index * 0.15)} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            // Заглушка, если массив пустой или не пришел
+                            <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-1 animate-in fade-in duration-300">
+                                <p className="text-sm font-semibold text-slate-500">Сбоев нет</p>
+                                <p className="text-xs text-slate-400">За выбранный период ошибок на узлах не зафиксировано</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

@@ -41,6 +41,37 @@ public interface MessageAuditRepository extends JpaRepository<MessageAudit, UUID
             "GROUP BY hr ORDER BY hr", nativeQuery = true)
     List<Object[]> getHourlyStatsInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
+    @Query(value = """
+WITH buckets AS (
+    -- Генерируем сетку из ровно 10 временных интервалов (от 0 до 9)
+    -- Используем безопасный CAST(... AS interval) вместо конфликтующего ::interval
+    SELECT 
+        CAST(:from AS TIMESTAMP) + (i * CAST(:step || ' second' AS interval)) AS b_start,
+        CAST(:from AS TIMESTAMP) + ((i + 1) * CAST(:step || ' second' AS interval)) AS b_end
+    FROM generate_series(0, 9) i
+),
+trace_summaries AS (
+    -- Схлопываем аудит до уникальных trace_id и определяем финальный статус сообщения
+    SELECT 
+        trace_id,
+        MIN(created_at) as trace_time,
+        MAX(CASE WHEN status = 'ERROR' THEN 1 ELSE 0 END) as has_error
+    FROM message_audit
+    WHERE created_at BETWEEN :from AND :to
+    GROUP BY trace_id
+)
+SELECT 
+    b.b_start AS time_bucket,
+    COUNT(DISTINCT CASE WHEN t.has_error = 0 THEN t.trace_id END) AS success,
+    COUNT(DISTINCT CASE WHEN t.has_error = 1 THEN t.trace_id END) AS errors
+FROM buckets b
+LEFT JOIN trace_summaries t ON t.trace_time >= b.b_start 
+    AND (t.trace_time < b.b_end OR (b.b_end >= CAST(:to AS TIMESTAMP) AND t.trace_time <= CAST(:to AS TIMESTAMP)))
+GROUP BY b.b_start
+ORDER BY b.b_start ASC
+""", nativeQuery = true)
+    List<Object[]> getDynamicStatsInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to, @Param("step") long step);
+
     // Главный метод аналитики (считает всё за один проход по индексам)
     @Query(value = """
     SELECT 

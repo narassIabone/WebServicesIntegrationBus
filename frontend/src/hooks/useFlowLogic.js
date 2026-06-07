@@ -55,6 +55,7 @@ export const useFlowLogic = (initialRouteId) => {
 
                 return {
                     id: Number(n.id),
+                    name: currentConfig.name || "",
                     type: n.data.type.toUpperCase(),
                     start: !!isStart,
                     config: finalConfig
@@ -309,7 +310,11 @@ export const useFlowLogic = (initialRouteId) => {
                 data: {
                     type: n.type,
                     label: NODE_METADATA[n.type]?.title || n.type,
-                    config: { ...n.config, isStart: n.start }
+                    config: {
+                        ...n.config,
+                        name: n.name || '',
+                        isStart: n.start
+                    }
                 }
             };
         });

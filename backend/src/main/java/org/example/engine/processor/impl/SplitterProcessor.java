@@ -21,12 +21,12 @@ public class SplitterProcessor implements NodeProcessor {
         if (!message.getContext().containsKey("correlationId")) {
             String correlationId = message.getId().toString();
             message.getContext().put("correlationId", correlationId);
-            log.debug("[Node {} (SPLITTER)] Установлен Correlation ID: {}", config.getId(), correlationId);
+            log.debug("[Node 'SPLITTER' ({})] Установлен Correlation ID: {}", config.getName(), correlationId);
         }
 
         try {
-            log.info("[Node {} (SPLITTER)] Подготовка сообщения {} к разделению/пробросу",
-                    config.getId(), message.getId());
+            log.info("[Node 'SPLITTER' ({})] Подготовка сообщения {} к разделению/пробросу",
+                    config.getName(), message.getId());
 
             return ProcessorResult.builder()
                     .envelope(ProcessorResult.OutboundEnvelope.builder()
@@ -36,8 +36,8 @@ public class SplitterProcessor implements NodeProcessor {
                     .build();
 
         } catch (Exception e) {
-            log.error("[Error] Сбой в работе Splitter (Node {}): {}", config.getId(), e.getMessage());
-            throw new FatalException("Splitter Node " + config.getId() + " failed: " + e.getMessage());
+            log.error("[Error] Сбой в работе Splitter (Node {}): {}", config.getName(), e.getMessage());
+            throw new FatalException("Splitter Node " + config.getName() + " failed: " + e.getMessage());
         }
     }
 }

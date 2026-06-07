@@ -9,6 +9,7 @@ import org.example.engine.processor.NodeProcessor;
 import org.example.engine.processor.ProcessorResult;
 import org.example.model.entity.Message;
 import org.example.model.entity.NodeConfig;
+import org.example.service.SystemSettingsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -45,13 +46,14 @@ public class FilterProcessor implements NodeProcessor {
     private final ObjectMapper objectMapper;
     private final ExpressionParser parser = new SpelExpressionParser();
     private final KafkaProducerService kafkaProducerService;
+    private final SystemSettingsService settingsService;
 
-    @Value("${app.kafka.topics.delivered:messages.delivered}")
-    private String deliveredTopic;
-
-    public FilterProcessor(ObjectMapper objectMapper, KafkaProducerService kafkaProducerService) {
+    public FilterProcessor(ObjectMapper objectMapper,
+                           KafkaProducerService kafkaProducerService,
+                           SystemSettingsService settingsService) {
         this.objectMapper = objectMapper;
         this.kafkaProducerService = kafkaProducerService;
+        this.settingsService = settingsService;
     }
 
     @Override
@@ -67,11 +69,11 @@ public class FilterProcessor implements NodeProcessor {
         String ifFalseAction = params.getOrDefault("ifFalse", "CONTINUE");
         String falseTargetNodeId = params.get("on_false_target_node");
 
-        log.info("[Node {} (FILTER)] Проверка условия: [{}]", config.getId(), expressionStr);
+        log.info("[Node 'FILTER' ({})] Проверка условия: [{}]", config.getName(), expressionStr);
 
         boolean isMatched;
         try {
-            isMatched = evaluate(expressionStr, message, config.getId());
+            isMatched = evaluate(expressionStr, message, config.getName());
         } catch (Exception e) {
             log.error("[Error] Ошибка вычисления SpEL в ноде {}: {}", config.getId(), e.getMessage());
             throw new FatalException("Ошибка вычисления фильтра [" + expressionStr + "]: " + e.getMessage());
@@ -82,13 +84,13 @@ public class FilterProcessor implements NodeProcessor {
         message.getContext().put(nodePrefix + ".expression", expressionStr);
 
         if (isMatched) {
-            log.info("[Node {} (FILTER)] Условие выполнено (MATCHED). Сообщение продолжает маршрут.", config.getId());
+            log.info("[Node 'FILTER' ({})] Условие выполнено (MATCHED). Сообщение продолжает маршрут.", config.getName());
             return ProcessorResult.builder()
                     .envelope(new ProcessorResult.OutboundEnvelope(message, null))
                     .build();
         }
 
-        log.info("[Node {} (FILTER)] Условие НЕ выполнено (SKIPPED). Применяется действие: {}", config.getId(), ifFalseAction);
+        log.info("[Node 'FILTER' ({})] Условие НЕ выполнено (SKIPPED). Применяется действие: {}", config.getName(), ifFalseAction);
 
         switch (ifFalseAction.toUpperCase()) {
             case "CONTINUE":
@@ -100,15 +102,21 @@ public class FilterProcessor implements NodeProcessor {
                 if (falseTargetNodeId == null || falseTargetNodeId.isBlank()) {
                     throw new FatalException("Filter Node " + config.getId() + ": отсутствует on_false_target_node для DIVERGE");
                 }
-                log.info("[Node {} (FILTER)] Дивергенция: перенаправление сообщения в узел {}", config.getId(), falseTargetNodeId);
+                log.info("[Node 'FILTER' ({})] Дивергенция: перенаправление сообщения в узел {}", config.getName(), falseTargetNodeId);
                 return ProcessorResult.builder()
                         .envelope(new ProcessorResult.OutboundEnvelope(message, Integer.parseInt(falseTargetNodeId)))
                         .build();
 
             case "FINISH":
-                log.info("[Node {} (FILTER)] Завершение маршрута согласно настройкам фильтра.", config.getId());
+                log.info("[Node 'FILTER' ({})] Завершение маршрута согласно настройкам фильтра.", config.getName());
                 message.getContext().put(nodePrefix + ".exit_reason", "FILTER_FINISH");
-                kafkaProducerService.route(message, deliveredTopic);
+
+                String finalTopic = settingsService.getString("topic_final", "messages.delivered");
+
+                log.info("[Filter] Отправка отфильтрованного сообщения {} в финальный топик: {}",
+                        message.getId(), finalTopic);
+
+                kafkaProducerService.route(message, finalTopic);
                 return ProcessorResult.builder().build();
 
             default:
@@ -116,7 +124,7 @@ public class FilterProcessor implements NodeProcessor {
         }
     }
 
-    private boolean evaluate(String expressionStr, Message message, int nodeId) {
+    private boolean evaluate(String expressionStr, Message message, String nodeName) {
         StandardEvaluationContext context = new StandardEvaluationContext();
         context.setVariable("headers", message.getHeaders());
         context.setVariable("context", message.getContext());
@@ -128,7 +136,7 @@ public class FilterProcessor implements NodeProcessor {
             );
             context.setVariable("payload", payloadMap);
         } catch (Exception e) {
-            log.debug("[Node {} (FILTER)] Payload не является JSON, используется как String", nodeId);
+            log.debug("[Node 'FILTER' ({})] Payload не является JSON, используется как String", nodeName);
             context.setVariable("payload", message.getPayload());
         }
 

@@ -27,6 +27,7 @@ public class AuditService {
                     .routeId(data.getRouteId())
                     .routeName(data.getRouteName())
                     .nodeId(data.getNodeId())
+                    .nodeName(data.getNodeName())
                     .nodeType(data.getNodeType())
                     .status(data.getStatus())
                     .payloadBefore(data.getPayloadBefore())

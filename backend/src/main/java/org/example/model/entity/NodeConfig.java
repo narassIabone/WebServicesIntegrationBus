@@ -20,6 +20,9 @@ public class NodeConfig {
     @Column(name = "business_id")
     private int id;
 
+    @Column(name = "name")
+    private String name;
+
     @Enumerated(EnumType.STRING)
     private NodeType type;
 

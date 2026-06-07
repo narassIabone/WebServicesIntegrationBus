@@ -7,6 +7,7 @@ import org.example.repository.MessageAuditRepository;
 import org.example.service.TimeRangeService;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -44,8 +45,17 @@ public class AuditController {
                 .average()
                 .orElse(0.0);
 
-        // 3. График почасовой активности
-        List<Object[]> rawStats = auditRepository.getHourlyStatsInRange(dates.from(), dates.to());
+        // 3. ИСПРАВЛЕНО: Динамический график активности на гарантированные 10 точек
+        // Вычисляем полную длину выбранного периода в секундах
+        long totalSeconds = Duration.between(dates.from(), dates.to()).getSeconds();
+
+        // Делим весь период на 10 равных интервалов.
+        // Math.max защищает от 0 или отрицательных значений при микро-интервалах.
+        long stepSeconds = Math.max(1, totalSeconds / 10);
+
+        // Запрашиваем из базы сгруппированные данные с динамическим шагом bucket'а
+        List<Object[]> rawStats = auditRepository.getDynamicStatsInRange(dates.from(), dates.to(), stepSeconds);
+
         List<Map<String, Object>> formattedStats = rawStats.stream().map(row -> {
             LocalDateTime ldt = parseToLocalDateTime(row[0]);
             return Map.of(
@@ -59,7 +69,9 @@ public class AuditController {
                 "summary", Map.of("total", total, "success", success, "errors", errors),
                 "avgLatency", Math.round(avgLatency),
                 "nodeErrors", auditRepository.countErrorsByNodeTypeInRange(dates.from(), dates.to()),
-                "hourlyStats", formattedStats
+                "hourlyStats", formattedStats,
+                "periodStart", dates.from().format(DateTimeFormatter.ofPattern("dd.MM HH:mm")),
+                "periodEnd", dates.to().format(DateTimeFormatter.ofPattern("dd.MM HH:mm"))
         );
     }
 

@@ -1,10 +1,11 @@
 import React from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { Database, Zap, Split, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { NODE_METADATA } from '../../constants/nodeMetadata.js';
 
 const ServiceNode = ({ id, data, selected }) => {
     const isStart = data.config?.isStart;
+    const nodeName = data.config?.name || data.name;
 
     const { deleteElements } = useReactFlow();
 
@@ -30,7 +31,7 @@ const ServiceNode = ({ id, data, selected }) => {
             ${selected ? 'shadow-lg shadow-blue-100' : 'shadow-sm'}
             ${isStart ? 'shadow-lg shadow-emerald-100' : ''}
             hover:border-blue-300 hover:shadow-md
-            w-24 h-24 flex flex-col items-center justify-center p-2
+            w-28 h-24 flex flex-col items-center justify-center p-2
         `}>
 
             {/* Крестик удаления */}
@@ -53,24 +54,39 @@ const ServiceNode = ({ id, data, selected }) => {
                 </div>
             )}
 
-            {/* Динамический цвет ID */}
-            <div className={`absolute top-2 left-2 text-[8px] font-black leading-none opacity-40 ${meta.accentColor || 'text-slate-300'}`}>
-                #{id}
+            {/* ИЗМЕНИЛИ ТУТ: Хедер карточки (ID + Тип узла в одну линию) */}
+            <div className="absolute top-2 left-2 right-6 flex items-center gap-1.5 min-w-0 pointer-events-none">
+                {/* ID узла */}
+                <span className={`text-[8px] font-black leading-none opacity-40 shrink-0 ${meta.accentColor || 'text-slate-300'}`}>
+                    #{id}
+                </span>
+                {/* Тип узла */}
+                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider truncate leading-none pt-[1px]">
+                    {meta.title || data.type}
+                </span>
             </div>
 
-            <div className="flex flex-col items-center justify-center gap-1.5">
-                {/* Иконка с динамическим фоном и цветом */}
+            {/* Контейнер контента */}
+            <div className="flex flex-col items-center justify-center gap-1 w-full text-center mt-3">
+                {/* Иконка */}
                 <div className={`
-                    p-2 rounded-xl transition-colors
+                    p-1.5 rounded-xl transition-colors shrink-0
                     ${meta.bgColor || 'bg-slate-50'} 
                     ${selected ? (meta.color || 'text-blue-500') : (meta.color || 'text-slate-600')}
                 `}>
-                    {Icon && <Icon size={20} fill={selected ? "currentColor" : "none"} fillOpacity={0.2} />}
+                    {Icon && <Icon size={16} fill={selected ? "currentColor" : "none"} fillOpacity={0.2} />}
                 </div>
 
-                {/* Заголовок с динамическим цветом текста */}
-                <div className={`text-[10px] font-black uppercase tracking-tight text-center leading-tight ${meta.accentColor || 'text-slate-700'}`}>
-                    {meta.title || data.type}
+                <div className="w-full px-1 min-w-0">
+                    <div className="text-[10px] font-black uppercase tracking-tight whitespace-normal break-words leading-tight w-full">
+                        {nodeName ? (
+                            // Если имя введено — красим в сочный slate-900
+                            <span className="text-rose-900">{nodeName}</span>
+                        ) : (
+                            // Если имени нет — показываем аккуратный серый плейсхолдер
+                            <span className="text-slate-200 font-bold italic tracking-wide"></span>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
