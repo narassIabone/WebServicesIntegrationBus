@@ -1,0 +1,44 @@
+{
+  "name": "Broadcast-Test-Route",
+  "nodes": [
+    {
+      "id": 1,
+      "type": "BROADCAST",
+      "isStart": true
+    },
+    {
+      "id": 2,
+      "type": "LOG",
+      "config": {
+        "prefix": "ALPHA-BRANCH",
+        "show_headers": "true"
+      }
+    },
+    {
+      "id": 3,
+      "type": "LOG",
+      "config": {
+        "prefix": "BETA-BRANCH",
+        "show_headers": "false"
+      }
+    }
+  ],
+  "links": [
+    {
+      "fromNodeId": 1,
+      "toNodeId": 2,
+      "fieldMapping": {
+        "order_id": "id",
+        "total_price": "amount"
+      }
+    },
+    {
+      "fromNodeId": 1,
+      "toNodeId": 3,
+      "fieldMapping": {
+        "customer_name": "recipient",
+        "currency": "unit"
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "order-processing-v1",
+  "nodes": [
+    {
+      "id": 1,
+      "type": "REST_CALL",
+      "useSourceAsBase": true,
+      "targetFormat": "JSON",
+      "config": {
+        "url": "http://api.warehouse.com/v1/check",
+        "method": "POST",
+        "timeout": "5000"
+      }
+    },
+    {
+      "type": "TRANSFORM",
+      "useSourceAsBase": false,
+      "targetFormat": "XML",
+      "config": {
+        "rootElement": "OrderRequest"
+      }
+    },
+    {
+      "type": "REST_CALL",
+      "useSourceAsBase": true,
+      "targetFormat": "JSON",
+      "config": {
+        "url": "http://sms-gateway.local/send",
+        "method": "POST"
+      }
+    }
+  ],
+  "links": [
+    {
+      "fromNodeId": 1,
+      "toNodeId": 2,
+      "async": true,
+      "fieldMapping": {
+        "order_id": "externalId",
+        "total_price": "amount"
+      }
+    },
+    {
+      "fromNodeId": 1,
+      "toNodeId": 3,
+      "async": true,
+      "fieldMapping": {}
+    },
+    {
+      "fromNodeId": 3,
+      "toNodeId": 4,
+      "async": true,
+      "fieldMapping": {}
+    }
+  ]
+}
